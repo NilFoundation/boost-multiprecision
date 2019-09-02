@@ -1154,4 +1154,4 @@ script:
 
 notifications:
   email:
-    on_success: always-
+    on_success: always
