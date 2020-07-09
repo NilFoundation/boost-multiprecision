@@ -1031,42 +1031,41 @@ inline void eval_convert_to(boost::ulong_long_type* result, const gmp_float<digi
 }
 #endif
 
-template<typename Backend, expression_template_option ExpressionTemplates>
-   std::vector<long> mpf_wnaf(const size_t window_size, const number<Backend, ExpressionTemplates> &scalar) {
-      const size_t length = scalar.max_bits();    // upper bound
-      std::vector<long> res(length + 1);
-      number_type<n> c = scalar;
-      long j = 0;
-      while (!c.is_zero()) {
-         long u;
-         if ((c.data[0] & 1) == 1) {
-            u = c.data[0] % (1u << (window_size + 1));
-            if (u > (1 << window_size)) {
-               u = u - (1 << (window_size + 1));
-            }
+std::vector<long> mpf_wnaf(const size_t window_size, const number<gmp_int> &scalar) {
+   const size_t length = scalar.max_bits();    // upper bound
+   std::vector<long> res(length + 1);
+   number_type<n> c = scalar;
+   long j = 0;
+   while (!c.is_zero()) {
+      long u;
+      if ((c.data[0] & 1) == 1) {
+         u = c.data[0] % (1u << (window_size + 1));
+         if (u > (1 << window_size)) {
+            u = u - (1 << (window_size + 1));
+         }
 
-            if (u > 0) {
-               mpn_sub_1(c.data, c.data, n, u);
-            } else {
-               mpn_add_1(c.data, c.data, n, -u);
-            }
+         if (u > 0) {
+            mpn_sub_1(c.data, c.data, n, u);
          } else {
-            u = 0;
+            mpn_add_1(c.data, c.data, n, -u);
          }
-            res[j] = u;
-            ++j;
+      } else {
+         u = 0;
+      }
+         res[j] = u;
+         ++j;
 
-            mpn_rshift(c.data, c.data, n, 1);    // c = c/2
-         }
+         mpn_rshift(c.data, c.data, n, 1);    // c = c/2
+      }
 
-      return res;
-   }
+   return res;
+}
 
         /**
          * In additive notation, use wNAF exponentiation (with the given window size) to compute scalar * base.
          */
-template<typename NumberType>
-   T fixed_window_wnaf_exp(const size_t window_size, const T &base, const number_type<n> &scalar) {
+template<typename T>
+   T fixed_window_wnaf_exp(const size_t window_size, const T &base, const number<gmp_int> &scalar) {
       std::vector<long> naf = mpf_wnaf(window_size, scalar);
       std::vector<T> table(1ul << (window_size - 1));
       T tmp = base;
@@ -1100,8 +1099,8 @@ template<typename NumberType>
          * In additive notation, use wNAF exponentiation (with the window size determined by T) to compute scalar *
          * base.
          */
-template<typename T, mp_size_t n>
-   T opt_window_wnaf_exp(const T &base, const number_type<n> &scalar, const size_t scalar_bits) {
+template<typename T>
+   T opt_window_wnaf_exp(const T &base, const number<gmp_int> &scalar, const size_t scalar_bits) {
       size_t best = 0;
       for (long i = T::wnaf_window_table.size() - 1; i >= 0; --i) {
          if (scalar_bits >= T::wnaf_window_table[i]) {
@@ -1158,7 +1157,7 @@ using window_table = std::vector<std::vector<T>>;
 template<typename number<Backend>>
 class ordered_exponent {
 // to use std::push_heap and friends later
-typedef number<Backend> NumberType;
+typedef number NumberType;
 
    public:
       size_t idx;
@@ -1166,65 +1165,7 @@ typedef number<Backend> NumberType;
 
       ordered_exponent(const size_t idx, const NumberType &r) : idx(idx), r(r) {};
 
-      bool operator<(const ordered_exponent<n> &other) const {
-#if defined(__x86_64__) && defined(USE_ASM)
-         if (n == 3) {
-            long res;
-            __asm__
-            ("// check for overflow          \n\t"
-            "mov $0, %[res]                  \n\t"
-            ADD_CMP(16)
-            ADD_CMP(8)
-            ADD_CMP(0)
-            "jmp done%=                      \n\t"
-            "subtract%=:                     \n\t"
-            "mov $1, %[res]                  \n\t"
-            "done%=:                         \n\t"
-            : [res] "=&r" (res)
-            : [A] "r" (other.r.data), [mod] "r" (this->r.data)
-            : "cc", "%rax");
-            return res;
-         } else if (n == 4) {
-            long res;
-            __asm__
-            ("// check for overflow           \n\t"
-            "mov $0, %[res]                  \n\t"
-            ADD_CMP(24)
-            ADD_CMP(16)
-            ADD_CMP(8)
-            ADD_CMP(0)
-            "jmp done%=                      \n\t"
-            "subtract%=:                     \n\t"
-            "mov $1, %[res]                  \n\t"
-            "done%=:                         \n\t"
-            : [res] "=&r" (res)
-            : [A] "r" (other.r.data), [mod] "r" (this->r.data)
-            : "cc", "%rax");
-            return res;
-         } else if (n == 5) {
-            long res;
-            __asm__
-            ("// check for overflow           \n\t"
-            "mov $0, %[res]                  \n\t"
-            ADD_CMP(32)
-            ADD_CMP(24)
-            ADD_CMP(16)
-            ADD_CMP(8)
-            ADD_CMP(0)
-            "jmp done%=                      \n\t"
-            "subtract%=:                     \n\t"
-            "mov $1, %[res]                  \n\t"
-            "done%=:                         \n\t"
-            : [res] "=&r" (res)
-            : [A] "r" (other.r.data), [mod] "r" (this->r.data)
-            : "cc", "%rax");
-            return res;
-         } else
-#endif
-         {
-            return (mpn_cmp(this->r.data, other.r.data, n) < 0);
-         }
-      }
+      bool operator<(const ordered_exponent<n> &other) const;
    };
 
    /**
@@ -1774,13 +1715,6 @@ typedef number<Backend> NumberType;
       }
       leave_block("Batch-convert elements to special form");
    }
-
-
-template <unsigned Digits10>
-inline void eval_wnaf(gmp_float<Digits10>& result, const gmp_float<Digits10>& val)
-{
-   mpf_wnaf(result.data(), val.data());
-}
 
 template <unsigned Digits10>
 inline void eval_sqrt(gmp_float<Digits10>& result, const gmp_float<Digits10>& val)
