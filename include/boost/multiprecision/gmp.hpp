@@ -1031,7 +1031,7 @@ inline void eval_convert_to(boost::ulong_long_type* result, const gmp_float<digi
 }
 #endif
 
-std::vector<long> mpf_wnaf(const size_t window_size, const number<gmp_int> &scalar) {
+std::vector<long> find_wnaf(const size_t window_size, const number<gmp_int> &scalar) {
    const size_t length = scalar.max_bits();    // upper bound
    std::vector<long> res(length + 1);
    number_type<n> c = scalar;
@@ -1066,7 +1066,7 @@ std::vector<long> mpf_wnaf(const size_t window_size, const number<gmp_int> &scal
          */
 template<typename T>
    T fixed_window_wnaf_exp(const size_t window_size, const T &base, const number<gmp_int> &scalar) {
-      std::vector<long> naf = mpf_wnaf(window_size, scalar);
+      std::vector<long> naf = find_wnaf(window_size, scalar);
       std::vector<T> table(1ul << (window_size - 1));
       T tmp = base;
       T dbl = base.dbl();
