@@ -1169,28 +1169,28 @@ typedef number NumberType;
    };
 
    /**
-   * multi_exp_inner<T, FieldT, Method>() implementes the specified
+   * multi_exp_inner<T, OT, Method>() implementes the specified
    * multiexponentiation method.
    * this implementation relies on some rather arcane template magic:
    * function templates cannot be partially specialized, so we cannot just write
-   *     template<typename T, typename FieldT>
-   *     T multi_exp_inner<T, FieldT, multi_exp_method_naive>
+   *     template<typename T, typename OT>
+   *     T multi_exp_inner<T, OT, multi_exp_method_naive>
    * thus we resort to using std::enable_if. the basic idea is that *overloading*
    * is what's actually happening here, it's just that, for any given value of
    * Method, only one of the templates will be valid, and thus the correct
    * implementation will be used.
    */
 
-   template<typename T, typename FieldT, multi_exp_method Method,
+   template<typename T, typename OT, multi_exp_method Method,
             typename std::enable_if<(Method == multi_exp_method_naive), int>::type = 0>
    T multi_exp_inner(typename std::vector<T>::const_iterator vec_start,
                      typename std::vector<T>::const_iterator vec_end,
-                     typename std::vector<FieldT>::const_iterator scalar_start,
-                     typename std::vector<FieldT>::const_iterator scalar_end) {
+                     typename std::vector<OT>::const_iterator scalar_start,
+                     typename std::vector<OT>::const_iterator scalar_end) {
             T result(T::zero());
 
       typename std::vector<T>::const_iterator vec_it;
-      typename std::vector<FieldT>::const_iterator scalar_it;
+      typename std::vector<OT>::const_iterator scalar_it;
 
       for (vec_it = vec_start, scalar_it = scalar_start; vec_it != vec_end; ++vec_it, ++scalar_it) {
          NumberType scalar_bigint = scalar_it->as_bigint();
@@ -1201,16 +1201,16 @@ typedef number NumberType;
       return result;
    }
 
-   template<typename T, typename FieldT, multi_exp_method Method,
+   template<typename T, typename OT, multi_exp_method Method,
             typename std::enable_if<(Method == multi_exp_method_naive_plain), int>::type = 0>
    T multi_exp_inner(typename std::vector<T>::const_iterator vec_start,
                      typename std::vector<T>::const_iterator vec_end,
-                     typename std::vector<FieldT>::const_iterator scalar_start,
-                     typename std::vector<FieldT>::const_iterator scalar_end) {
+                     typename std::vector<OT>::const_iterator scalar_start,
+                     typename std::vector<OT>::const_iterator scalar_end) {
       T result(T::zero());
 
       typename std::vector<T>::const_iterator vec_it;
-      typename std::vector<FieldT>::const_iterator scalar_it;
+      typename std::vector<OT>::const_iterator scalar_it;
 
       for (vec_it = vec_start, scalar_it = scalar_start; vec_it != vec_end; ++vec_it, ++scalar_it) {
          result = result + (*scalar_it) * (*vec_it);
@@ -1220,12 +1220,12 @@ typedef number NumberType;
       return result;
    }
 
-   template<typename T, typename FieldT, multi_exp_method Method,
+   template<typename T, typename OT, multi_exp_method Method,
             typename std::enable_if<(Method == multi_exp_method_BDLO12), int>::type = 0>
    T multi_exp_inner(typename std::vector<T>::const_iterator bases,
                      typename std::vector<T>::const_iterator bases_end,
-                     typename std::vector<FieldT>::const_iterator exponents,
-                     typename std::vector<FieldT>::const_iterator exponents_end) {
+                     typename std::vector<OT>::const_iterator exponents,
+                     typename std::vector<OT>::const_iterator exponents_end) {
       UNUSED(exponents_end);
       size_t length = bases_end - bases;
 
@@ -1316,12 +1316,12 @@ typedef number NumberType;
       return result;
    }
 
-   template<typename T, typename FieldT, multi_exp_method Method,
+   template<typename T, typename OT, multi_exp_method Method,
             typename std::enable_if<(Method == multi_exp_method_bos_coster), int>::type = 0>
    T multi_exp_inner(typename std::vector<T>::const_iterator vec_start,
                      typename std::vector<T>::const_iterator vec_end,
-                     typename std::vector<FieldT>::const_iterator scalar_start,
-                     typename std::vector<FieldT>::const_iterator scalar_end) {
+                     typename std::vector<OT>::const_iterator scalar_start,
+                     typename std::vector<OT>::const_iterator scalar_end) {
          const mp_size_t n = std::remove_reference<decltype(*scalar_start)>::type::num_limbs;
 
          if (vec_start == vec_end) {
@@ -1340,7 +1340,7 @@ typedef number NumberType;
          g.reserve(odd_vec_len);
 
          typename std::vector<T>::const_iterator vec_it;
-         typename std::vector<FieldT>::const_iterator scalar_it;
+         typename std::vector<OT>::const_iterator scalar_it;
          size_t i;
          for (i = 0, vec_it = vec_start, scalar_it = scalar_start; vec_it != vec_end; ++vec_it, ++scalar_it, ++i) {
             g.emplace_back(*vec_it);
@@ -1425,16 +1425,16 @@ typedef number NumberType;
    * Input is split into the given number of chunks, and, when compiled with
    * MULTICORE, the chunks are processed in parallel.
    */
-   template<typename T, typename FieldT, multi_exp_method Method>
+   template<typename T, typename OT, multi_exp_method Method>
    T multi_exp(typename std::vector<T>::const_iterator vec_start,
                typename std::vector<T>::const_iterator vec_end,
-               typename std::vector<FieldT>::const_iterator scalar_start,
-               typename std::vector<FieldT>::const_iterator scalar_end,
+               typename std::vector<OT>::const_iterator scalar_start,
+               typename std::vector<OT>::const_iterator scalar_end,
                const size_t chunks) {
       const size_t total = vec_end - vec_start;
       if ((total < chunks) || (chunks == 1)) {
          // no need to split into "chunks", can call implementation directly
-         return multi_exp_inner<T, FieldT, Method>(vec_start, vec_end, scalar_start, scalar_end);
+         return multi_exp_inner<T, OT, Method>(vec_start, vec_end, scalar_start, scalar_end);
       }
 
       const size_t one = total / chunks;
@@ -1446,7 +1446,7 @@ typedef number NumberType;
 #endif
       for (size_t i = 0; i < chunks; ++i) {
          partial[i] =
-         multi_exp_inner<T, FieldT, Method>(vec_start + i * one,
+         multi_exp_inner<T, OT, Method>(vec_start + i * one,
                                              (i == chunks - 1 ? vec_end : vec_start + (i + 1) * one),
                                              scalar_start + i * one,
                                              (i == chunks - 1 ? scalar_end : scalar_start + (i + 1) * one));
@@ -1467,20 +1467,20 @@ typedef number NumberType;
    * Assumes input is in special form, and includes special pre-processing for
    * scalars equal to 0 or 1.
    */
-   template<typename T, typename FieldT, multi_exp_method Method>
+   template<typename T, typename OT, multi_exp_method Method>
    T multi_exp_with_mixed_addition(typename std::vector<T>::const_iterator vec_start,
                                     typename std::vector<T>::const_iterator vec_end,
-                                    typename std::vector<FieldT>::const_iterator scalar_start,
-                                    typename std::vector<FieldT>::const_iterator scalar_end,
+                                    typename std::vector<OT>::const_iterator scalar_start,
+                                    typename std::vector<OT>::const_iterator scalar_end,
                                     const size_t chunks) {
       assert(std::distance(vec_start, vec_end) == std::distance(scalar_start, scalar_end));
       enter_block("Process scalar vector");
       auto value_it = vec_start;
       auto scalar_it = scalar_start;
 
-      const FieldT zero = FieldT::zero();
-      const FieldT one = FieldT::one();
-      std::vector<FieldT> p;
+      const OT zero = OT::zero();
+      const OT one = OT::one();
+      std::vector<OT> p;
       std::vector<T> g;
 
       T acc = T::zero();
@@ -1518,7 +1518,7 @@ typedef number NumberType;
 
       leave_block("Process scalar vector");
 
-      return acc + multi_exp<T, FieldT, Method>(g.begin(), g.end(), p.begin(), p.end(), chunks);
+      return acc + multi_exp<T, OT, Method>(g.begin(), g.end(), p.begin(), p.end(), chunks);
    }
 
    /**
@@ -1605,11 +1605,11 @@ typedef number NumberType;
       return powers_of_g;
    }
 
-   template<typename T, typename FieldT>
+   template<typename T, typename OT>
    T windowed_exp(const size_t scalar_size,
                   const size_t window,
                   const window_table<T> &powers_of_g,
-                  const FieldT &pow) {
+                  const OT &pow) {
       const size_t outerc = (scalar_size + window - 1) / window;
       const NumberType pow_val = pow.as_bigint();
 
@@ -1630,11 +1630,11 @@ typedef number NumberType;
       return res;
    }
 
-   template<typename T, typename FieldT>
+   template<typename T, typename OT>
    std::vector<T> batch_exp(const size_t scalar_size,
                             const size_t window,
                             const window_table<T> &table,
-                            const std::vector<FieldT> &v) {
+                            const std::vector<OT> &v) {
       if (!inhibit_profiling_info) {
          print_indent();
       }
@@ -1659,12 +1659,12 @@ typedef number NumberType;
       return res;
    }
 
-   template<typename T, typename FieldT>
+   template<typename T, typename OT>
    std::vector<T> batch_exp_with_coeff(const size_t scalar_size,
                                        const size_t window,
                                        const window_table<T> &table,
-                                       const FieldT &coeff,
-                                       const std::vector<FieldT> &v) {
+                                       const OT &coeff,
+                                       const std::vector<OT> &v) {
       if (!inhibit_profiling_info) {
          print_indent();
       }
