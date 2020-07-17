@@ -1181,20 +1181,288 @@ typedef number NumberType;
    * implementation will be used.
    */
 
+
+
+   template<typename T, typename OT>
+   T multi_exp(typename std::vector<T>::const_iterator vec_start,
+               typename std::vector<T>::const_iterator vec_end, 
+               typename std::vector<OT>::const_iterator scalar_start,
+               typename std::vector<OT>::const_iterator scalar_end,
+               const size_t num_groups, const size_t bucket_size) {
+      size_t n = vec_end - vec_start;
+      size_t chunk_len = (n / num_groups);
+
+      std::vector<T> part_res(num_groups);
+
+      for (size_t j = 0; j < n; ++j) {
+         size_t start = j * chunk_len;
+         size_t end = min(start + chunk_len, n);
+         size_t bucket_start = bucket_size * j;
+         part_res[j] = multi_exp_subgroup (vec_start, scalar_start, start, end, bucket_size, bucket_start);
+      }
+
+      return ResultAggregation(part_res);
+   }
+
+   template<typename T>
+   T multi_exp_subgroup(typename std::vector<T>::const_iterator vec_start,
+                        typename std::vector<OT>::const_iterator scalar_start,
+                        const size_t start, const size_t end
+                        const size_t bucket_size, const size_t bucket_start) {
+      for (size_t l = bucket_start; l <= bucket_start + bucket_size; ++l) {
+         T res
+         workersd_amount
+         typename std::vector<T> part_sum(workers_amount, std::numeric_limits<double>::infinity());
+
+         for (size_t j = 0; j < workers_amount; ++j) {
+            typename std::vector<T> buckets(bucket_size, std::numeric_limits<double>::infinity());
+
+            for (size_t i = start; i <= end; ++i) {
+               size_t idx = get_bits(*(scalar_start + i), bucket_start, bucket_size, "binary");
+               if (idx > 0) {
+                  buckets[idx - 1] = buckets[idx - 1] + *(vec_start + i);
+               }
+            }
+
+            size_t acc = std::numeric_limits<double>::infinity();
+
+            for (size_t i = 0; i <= bucket_size; ++i) {
+               acc = acc + buckets[i];
+               part_sum[j] = part_sum[j] + acc;
+            }
+         }
+      }
+      return part_sum;
+   }
+
+   template<typename T>
+   T get_bits(typename std::vector<OT>::const_iterator scalar_start,
+              const size_t start, const size_t end,
+              typename std::string repr) {
+      size_t base;
+      T res = 0;
+
+      if (repr == "binary") {
+         base = 2;
+      }
+
+      for (size_t i = start; i < end; ++i) {
+         res = res + i * pow(base, i - start);
+      }
+      return res;
+   }
+
+   template<typename T> 
+   T result_aggregation(typename std::vector<T> r) {
+      L ??
+      typename std::vector<T> part_res(L, std::numeric_limits<double>::infinity());
+
+      for (size_t i = 0; i <= L ; ++i) {
+         part_res[i] = sum_par(r, i);
+      }
+
+      size_t S = std::numeric_limits<double>::infinity();
+
+      for (size_t i = 0; i <= L - 1; ++i) {
+         S = S * 2;
+         S = S + part_res[i];
+      }
+
+      return S;
+   }
+
+   template<typename T>
+   T sum_par(typename std::vector<T>::const_iterator vec_start) {
+       size_t h = n / log(n);
+      typename std::vector<T> part_res(h, std::numeric_limits<double>::infinity());
+
+      for (size_t i = 0; i <= h - 1; ++i) {
+         for (size_t j = 0; j <= log(n) - 1; ++j) {
+            part_res[i] = part_res[i] + *(vec_start + (i * log(n) + j));
+         }
+      }
+
+      const size_t parallel_boundary = ceil(log(n));
+      size_t m = ceil(n / log(n));
+
+      while (m > parallel_boundary) {
+         h = ceil(log(m));
+
+         for (i = 0; i <= (m / h) - 1; ++i) {
+            size_t d = h - 1;
+            if (i == (m / h) - 1) {
+               d = m - 1 - i * h;
+            }
+
+            for (j = 1; j <= d; ++j) {
+               part_res[i * h] = part_res[i * h] + part_res[i * h + j];
+            }
+            part_res[i] = part_res[i * h];
+         }
+
+         m = ceil(m / h);
+      }
+
+      for (i = 1; i <= m - 1; ++i) {
+         part_res[0] = part_res[0] + part_res[i];
+      }
+
+      return part_res[0];
+   }
+
+   basic_doubling(const size_t x1, const size_t y1, const size_t z1) {
+      const size_t A = x1 * x1;
+      const size_t B = y1 * y1;
+      const size_t C = B * B;
+      const size_t D = 2 * ((x1 + B) * (x1 + B) - A - C);
+      const size_t E = 3 * A;
+      const size_t F = E * E;
+      const size_t x3 = F - 2 * D;
+      const size_t y3 = E * (D - x3) - 8 * C;
+      const size_t z3 = 2 * y1 * z1;
+
+         return (x3:y3:z3);
+   }
+
+   template<typename T>
+   two_thread_doubling(const size_t x1, const size_t y1, const size_t z1) {
+      typename std::vector<T> r(9, 0);
+
+      r[0] = x1 * x1;
+      r[4] = 3 * r[0];
+      r[5] = r[4] * r[4];
+
+      r[1] = y1 * y1;
+      r[2] = r[1] * r[1];
+      r[8] = 2 * y1 * z1;
+
+      r[3] = 2 * ((x1 + r[1]) * (x1 + r[1]) - r[0] * r[2]);
+      r[6] = r[5] - 2 * r[3];
+      r[7] = r[4] * (r[3] - r[6]) - 8 * r[2];
+
+      return (r[6]:r[7]:r[8]);
+   }
+
+   basic_mixed_addition(const size_t x1, const size_t y1, const size_t z1,
+                        const size_t x2, const size_t y2, const size_t z2) {
+      const size_t ZZ = z1 * z1;
+      const size_t U2 = ZZ * x2;
+      const size_t S2 = y2 * z1 * ZZ;
+      const size_t H = U2 - x1;
+      const size_t HH = H * H;
+      const size_t I = 4 * HH;
+      const size_t J = H * I;
+      const size_t r = 2 * (S2 * y1);
+      const size_t V = x1 * I;
+      const size_t x3 = r * r - J - 2 * V;
+      const size_t y3 = r * (V - x3) - 2 * y1 * J;
+      const size_t z3 = (z1 + H) * (z1 + H) - ZZ - HH;
+
+      return (x3:y3:z3);
+   }
+
+   three_thread_mixed_addition(const size_t x1, const size_t y1, const size_t z1,
+                               const size_t x2, const size_t y2, const size_t z2 = 1) {
+      typename std::vector<T> R(18, 0);
+      R[0] = z1 * z1;
+      R[1] = R[0] * z1;
+      R[3] = R[1] * y2;
+      R[5] = R[3] - y1;
+      R[10] = R[5] * R[5];
+
+      R[2] = R[0] * x2;
+      R[4] = x1 - r[2];
+      R[6] = z1 * r[4];
+      R[7] = R[4] * R[4];
+
+      R[9] = R[7] * x1;
+      R[13] = R[9] * y1;
+
+      R[8] = R[4] * R[7];
+      R[12] = R[8] * y1;
+
+      R[11] = R[10] + R[8];
+      R[14] = R[11] - R[13];
+      R[15] = R[14] - R[9];
+      R[16] = R[15] * R[5];
+      R[17] = R[16] - R[12];
+
+      return (R[14]:R[17]:R[6]);
+   }
+
+   basic_addition(const size_t x1, const size_t y1, const size_t z1,
+                  const size_t x2, const size_t y2, const size_t z2) {
+      const size_t z1z1 = z1 * z1;
+      const size_t z2z2 = z2 * z2;
+      const size_t u1 = x1 * z2z2;
+      const size_t u2 = x2 * z1z1;
+      const size_t s1 = y1 * z2 * z2z2;
+      const size_t s2 = y2 * z1 * z1z1;
+      const size_t h = u2 - u1;
+      const size_t i = 2 * h * 2 * h;
+      const size_t j = h * i;
+      const size_t r = 2 * (s2 - s1);
+      const size_t v = u1 * i;
+      const size_t x3 = r * r - j - 2 * v;
+      const size_t y3 = r * (v - x3) - 2 * s1 * j;
+      const size_t z3 = ((z1 + z2) * (z1 + z2) - z1z1 - z2z2) * h;
+
+      return (x3:y3:z3);
+   }
+
+   two_thread_addition(const size_t x1, const size_t y1, const size_t z1,
+                       const size_t x2, const size_t y2, const size_t z2) {
+      typename std::vector<T> r(15, 0);
+
+      r[0] = z1 * z1;
+      r[3] = r[0] * x2;
+      r[5] = r[0] * y2 * z1;
+
+      r[1] = z2 * z2;
+      r[2] = r[1] * x1;
+      r[4] = r[1] * y1 * z2;
+
+      r[6] = r[3] - r[2];
+      r[7] = 2 * r[6] * 2 * r[6];
+
+      r[8] = r[6] * r[7];
+      r[11] = r[2] * r[7];
+
+      r[9] = 2 * (r[5] - r[4]);
+      r[10] = r[9] * r[9];
+
+      r[12] = r[10] - r[8] - 2 * r[11];
+
+      r[13] = r[9] * (r[11] - r[12]) - 2 * r[4] * r[8];
+
+      r[14] = ((z1 + z2) * (z1 + z2) - r[0] - r[1]) * r[6];
+
+      return (r[12]:r[13]:r[14]);
+   }
+
+
+
+
+
+
    template<typename T, typename OT, multi_exp_method Method,
             typename std::enable_if<(Method == multi_exp_method_naive), int>::type = 0>
    T multi_exp_inner(typename std::vector<T>::const_iterator vec_start,
                      typename std::vector<T>::const_iterator vec_end,
                      typename std::vector<OT>::const_iterator scalar_start,
                      typename std::vector<OT>::const_iterator scalar_end) {
-            T result(T::zero());
+            T result;
 
       typename std::vector<T>::const_iterator vec_it;
       typename std::vector<OT>::const_iterator scalar_it;
 
       for (vec_it = vec_start, scalar_it = scalar_start; vec_it != vec_end; ++vec_it, ++scalar_it) {
          NumberType scalar_bigint = scalar_it->as_bigint();
-         result = result + opt_window_wnaf_exp(*vec_it, scalar_bigint, scalar_bigint.num_bits());
+         if (vec_it != vec_start) {
+            result = result + opt_window_wnaf_exp(*vec_it, scalar_bigint, scalar_bigint.num_bits());
+         } else {
+            result = opt_window_wnaf_exp(*vec_it, scalar_bigint, scalar_bigint.num_bits());
+         }
       }
       assert(scalar_it == scalar_end);
 
@@ -1207,13 +1475,17 @@ typedef number NumberType;
                      typename std::vector<T>::const_iterator vec_end,
                      typename std::vector<OT>::const_iterator scalar_start,
                      typename std::vector<OT>::const_iterator scalar_end) {
-      T result(T::zero());
+      T result;
 
       typename std::vector<T>::const_iterator vec_it;
       typename std::vector<OT>::const_iterator scalar_it;
 
       for (vec_it = vec_start, scalar_it = scalar_start; vec_it != vec_end; ++vec_it, ++scalar_it) {
-         result = result + (*scalar_it) * (*vec_it);
+         if (vec_it != vec_start) {
+            result = result + (*scalar_it) * (*vec_it);
+         } else {
+            result = (*scalar_it) * (*vec_it);;
+         }
       }
       assert(scalar_it == scalar_end);
 
