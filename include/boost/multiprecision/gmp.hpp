@@ -1031,7 +1031,7 @@ inline void eval_convert_to(boost::ulong_long_type* result, const gmp_float<digi
 }
 #endif
 
-std::vector<long> mpf_wnaf(const size_t window_size, const number<gmp_int> &scalar) {
+std::vector<long> find_wnaf(const size_t window_size, const number<gmp_int> &scalar) {
    const size_t length = scalar.max_bits();    // upper bound
    std::vector<long> res(length + 1);
    number_type<n> c = scalar;
@@ -1066,7 +1066,7 @@ std::vector<long> mpf_wnaf(const size_t window_size, const number<gmp_int> &scal
          */
 template<typename T>
    T fixed_window_wnaf_exp(const size_t window_size, const T &base, const number<gmp_int> &scalar) {
-      std::vector<long> naf = mpf_wnaf(window_size, scalar);
+      std::vector<long> naf = find_wnaf(window_size, scalar);
       std::vector<T> table(1ul << (window_size - 1));
       T tmp = base;
       T dbl = base.dbl();
@@ -1169,63 +1169,335 @@ typedef number NumberType;
    };
 
    /**
-   * multi_exp_inner<T, FieldT, Method>() implementes the specified
+   * multi_exp_inner<T, OT, Method>() implementes the specified
    * multiexponentiation method.
    * this implementation relies on some rather arcane template magic:
    * function templates cannot be partially specialized, so we cannot just write
-   *     template<typename T, typename FieldT>
-   *     T multi_exp_inner<T, FieldT, multi_exp_method_naive>
+   *     template<typename T, typename OT>
+   *     T multi_exp_inner<T, OT, multi_exp_method_naive>
    * thus we resort to using std::enable_if. the basic idea is that *overloading*
    * is what's actually happening here, it's just that, for any given value of
    * Method, only one of the templates will be valid, and thus the correct
    * implementation will be used.
    */
 
-   template<typename T, typename FieldT, multi_exp_method Method,
+
+
+   template<typename T, typename OT>
+   T multi_exp(typename std::vector<T>::const_iterator vec_start,
+               typename std::vector<T>::const_iterator vec_end, 
+               typename std::vector<OT>::const_iterator scalar_start,
+               typename std::vector<OT>::const_iterator scalar_end,
+               const size_t num_groups, const size_t bucket_size) {
+      size_t n = vec_end - vec_start;
+      size_t chunk_len = (n / num_groups);
+
+      std::vector<T> part_res(num_groups);
+
+      for (size_t j = 0; j < n; ++j) {
+         size_t start = j * chunk_len;
+         size_t end = min(start + chunk_len, n);
+         size_t bucket_start = bucket_size * j;
+         part_res[j] = multi_exp_subgroup (vec_start, scalar_start, start, end, bucket_size, bucket_start);
+      }
+
+      return ResultAggregation(part_res);
+   }
+
+   template<typename T>
+   T multi_exp_subgroup(typename std::vector<T>::const_iterator vec_start,
+                        typename std::vector<OT>::const_iterator scalar_start,
+                        const size_t start, const size_t end
+                        const size_t bucket_size, const size_t bucket_start) {
+      for (size_t l = bucket_start; l <= bucket_start + bucket_size; ++l) {
+         T res
+         workersd_amount
+         typename std::vector<T> part_sum(workers_amount, std::numeric_limits<double>::infinity());
+
+         for (size_t j = 0; j < workers_amount; ++j) {
+            typename std::vector<T> buckets(bucket_size, std::numeric_limits<double>::infinity());
+
+            for (size_t i = start; i <= end; ++i) {
+               size_t idx = get_bits(*(scalar_start + i), bucket_start, bucket_size, "binary");
+               if (idx > 0) {
+                  buckets[idx - 1] = buckets[idx - 1] + *(vec_start + i);
+               }
+            }
+
+            size_t acc = std::numeric_limits<double>::infinity();
+
+            for (size_t i = 0; i <= bucket_size; ++i) {
+               acc = acc + buckets[i];
+               part_sum[j] = part_sum[j] + acc;
+            }
+         }
+      }
+      return part_sum;
+   }
+
+   template<typename T>
+   T get_bits(typename std::vector<OT>::const_iterator scalar_start,
+              const size_t start, const size_t end,
+              typename std::string repr) {
+      size_t base;
+      T res = 0;
+
+      if (repr == "binary") {
+         base = 2;
+      }
+
+      for (size_t i = start; i < end; ++i) {
+         res = res + i * pow(base, i - start);
+      }
+      return res;
+   }
+
+   template<typename T> 
+   T result_aggregation(typename std::vector<T> r) {
+      L ??
+      typename std::vector<T> part_res(L, std::numeric_limits<double>::infinity());
+
+      for (size_t i = 0; i <= L ; ++i) {
+         part_res[i] = sum_par(r, i);
+      }
+
+      size_t S = std::numeric_limits<double>::infinity();
+
+      for (size_t i = 0; i <= L - 1; ++i) {
+         S = S * 2;
+         S = S + part_res[i];
+      }
+
+      return S;
+   }
+
+   template<typename T>
+   T sum_par(typename std::vector<T>::const_iterator vec_start) {
+       size_t h = n / log(n);
+      typename std::vector<T> part_res(h, std::numeric_limits<double>::infinity());
+
+      for (size_t i = 0; i <= h - 1; ++i) {
+         for (size_t j = 0; j <= log(n) - 1; ++j) {
+            part_res[i] = part_res[i] + *(vec_start + (i * log(n) + j));
+         }
+      }
+
+      const size_t parallel_boundary = ceil(log(n));
+      size_t m = ceil(n / log(n));
+
+      while (m > parallel_boundary) {
+         h = ceil(log(m));
+
+         for (i = 0; i <= (m / h) - 1; ++i) {
+            size_t d = h - 1;
+            if (i == (m / h) - 1) {
+               d = m - 1 - i * h;
+            }
+
+            for (j = 1; j <= d; ++j) {
+               part_res[i * h] = part_res[i * h] + part_res[i * h + j];
+            }
+            part_res[i] = part_res[i * h];
+         }
+
+         m = ceil(m / h);
+      }
+
+      for (i = 1; i <= m - 1; ++i) {
+         part_res[0] = part_res[0] + part_res[i];
+      }
+
+      return part_res[0];
+   }
+
+   basic_doubling(const size_t x1, const size_t y1, const size_t z1) {
+      const size_t A = x1 * x1;
+      const size_t B = y1 * y1;
+      const size_t C = B * B;
+      const size_t D = 2 * ((x1 + B) * (x1 + B) - A - C);
+      const size_t E = 3 * A;
+      const size_t F = E * E;
+      const size_t x3 = F - 2 * D;
+      const size_t y3 = E * (D - x3) - 8 * C;
+      const size_t z3 = 2 * y1 * z1;
+
+         return (x3:y3:z3);
+   }
+
+   template<typename T>
+   two_thread_doubling(const size_t x1, const size_t y1, const size_t z1) {
+      typename std::vector<T> r(9, 0);
+
+      r[0] = x1 * x1;
+      r[4] = 3 * r[0];
+      r[5] = r[4] * r[4];
+
+      r[1] = y1 * y1;
+      r[2] = r[1] * r[1];
+      r[8] = 2 * y1 * z1;
+
+      r[3] = 2 * ((x1 + r[1]) * (x1 + r[1]) - r[0] * r[2]);
+      r[6] = r[5] - 2 * r[3];
+      r[7] = r[4] * (r[3] - r[6]) - 8 * r[2];
+
+      return (r[6]:r[7]:r[8]);
+   }
+
+   basic_mixed_addition(const size_t x1, const size_t y1, const size_t z1,
+                        const size_t x2, const size_t y2, const size_t z2) {
+      const size_t ZZ = z1 * z1;
+      const size_t U2 = ZZ * x2;
+      const size_t S2 = y2 * z1 * ZZ;
+      const size_t H = U2 - x1;
+      const size_t HH = H * H;
+      const size_t I = 4 * HH;
+      const size_t J = H * I;
+      const size_t r = 2 * (S2 * y1);
+      const size_t V = x1 * I;
+      const size_t x3 = r * r - J - 2 * V;
+      const size_t y3 = r * (V - x3) - 2 * y1 * J;
+      const size_t z3 = (z1 + H) * (z1 + H) - ZZ - HH;
+
+      return (x3:y3:z3);
+   }
+
+   three_thread_mixed_addition(const size_t x1, const size_t y1, const size_t z1,
+                               const size_t x2, const size_t y2, const size_t z2 = 1) {
+      typename std::vector<T> R(18, 0);
+      R[0] = z1 * z1;
+      R[1] = R[0] * z1;
+      R[3] = R[1] * y2;
+      R[5] = R[3] - y1;
+      R[10] = R[5] * R[5];
+
+      R[2] = R[0] * x2;
+      R[4] = x1 - r[2];
+      R[6] = z1 * r[4];
+      R[7] = R[4] * R[4];
+
+      R[9] = R[7] * x1;
+      R[13] = R[9] * y1;
+
+      R[8] = R[4] * R[7];
+      R[12] = R[8] * y1;
+
+      R[11] = R[10] + R[8];
+      R[14] = R[11] - R[13];
+      R[15] = R[14] - R[9];
+      R[16] = R[15] * R[5];
+      R[17] = R[16] - R[12];
+
+      return (R[14]:R[17]:R[6]);
+   }
+
+   basic_addition(const size_t x1, const size_t y1, const size_t z1,
+                  const size_t x2, const size_t y2, const size_t z2) {
+      const size_t z1z1 = z1 * z1;
+      const size_t z2z2 = z2 * z2;
+      const size_t u1 = x1 * z2z2;
+      const size_t u2 = x2 * z1z1;
+      const size_t s1 = y1 * z2 * z2z2;
+      const size_t s2 = y2 * z1 * z1z1;
+      const size_t h = u2 - u1;
+      const size_t i = 2 * h * 2 * h;
+      const size_t j = h * i;
+      const size_t r = 2 * (s2 - s1);
+      const size_t v = u1 * i;
+      const size_t x3 = r * r - j - 2 * v;
+      const size_t y3 = r * (v - x3) - 2 * s1 * j;
+      const size_t z3 = ((z1 + z2) * (z1 + z2) - z1z1 - z2z2) * h;
+
+      return (x3:y3:z3);
+   }
+
+   two_thread_addition(const size_t x1, const size_t y1, const size_t z1,
+                       const size_t x2, const size_t y2, const size_t z2) {
+      typename std::vector<T> r(15, 0);
+
+      r[0] = z1 * z1;
+      r[3] = r[0] * x2;
+      r[5] = r[0] * y2 * z1;
+
+      r[1] = z2 * z2;
+      r[2] = r[1] * x1;
+      r[4] = r[1] * y1 * z2;
+
+      r[6] = r[3] - r[2];
+      r[7] = 2 * r[6] * 2 * r[6];
+
+      r[8] = r[6] * r[7];
+      r[11] = r[2] * r[7];
+
+      r[9] = 2 * (r[5] - r[4]);
+      r[10] = r[9] * r[9];
+
+      r[12] = r[10] - r[8] - 2 * r[11];
+
+      r[13] = r[9] * (r[11] - r[12]) - 2 * r[4] * r[8];
+
+      r[14] = ((z1 + z2) * (z1 + z2) - r[0] - r[1]) * r[6];
+
+      return (r[12]:r[13]:r[14]);
+   }
+
+
+
+
+
+
+   template<typename T, typename OT, multi_exp_method Method,
             typename std::enable_if<(Method == multi_exp_method_naive), int>::type = 0>
    T multi_exp_inner(typename std::vector<T>::const_iterator vec_start,
                      typename std::vector<T>::const_iterator vec_end,
-                     typename std::vector<FieldT>::const_iterator scalar_start,
-                     typename std::vector<FieldT>::const_iterator scalar_end) {
-            T result(T::zero());
+                     typename std::vector<OT>::const_iterator scalar_start,
+                     typename std::vector<OT>::const_iterator scalar_end) {
+            T result;
 
       typename std::vector<T>::const_iterator vec_it;
-      typename std::vector<FieldT>::const_iterator scalar_it;
+      typename std::vector<OT>::const_iterator scalar_it;
 
       for (vec_it = vec_start, scalar_it = scalar_start; vec_it != vec_end; ++vec_it, ++scalar_it) {
          NumberType scalar_bigint = scalar_it->as_bigint();
-         result = result + opt_window_wnaf_exp(*vec_it, scalar_bigint, scalar_bigint.num_bits());
+         if (vec_it != vec_start) {
+            result = result + opt_window_wnaf_exp(*vec_it, scalar_bigint, scalar_bigint.num_bits());
+         } else {
+            result = opt_window_wnaf_exp(*vec_it, scalar_bigint, scalar_bigint.num_bits());
+         }
       }
       assert(scalar_it == scalar_end);
 
       return result;
    }
 
-   template<typename T, typename FieldT, multi_exp_method Method,
+   template<typename T, typename OT, multi_exp_method Method,
             typename std::enable_if<(Method == multi_exp_method_naive_plain), int>::type = 0>
    T multi_exp_inner(typename std::vector<T>::const_iterator vec_start,
                      typename std::vector<T>::const_iterator vec_end,
-                     typename std::vector<FieldT>::const_iterator scalar_start,
-                     typename std::vector<FieldT>::const_iterator scalar_end) {
-      T result(T::zero());
+                     typename std::vector<OT>::const_iterator scalar_start,
+                     typename std::vector<OT>::const_iterator scalar_end) {
+      T result;
 
       typename std::vector<T>::const_iterator vec_it;
-      typename std::vector<FieldT>::const_iterator scalar_it;
+      typename std::vector<OT>::const_iterator scalar_it;
 
       for (vec_it = vec_start, scalar_it = scalar_start; vec_it != vec_end; ++vec_it, ++scalar_it) {
-         result = result + (*scalar_it) * (*vec_it);
+         if (vec_it != vec_start) {
+            result = result + (*scalar_it) * (*vec_it);
+         } else {
+            result = (*scalar_it) * (*vec_it);;
+         }
       }
       assert(scalar_it == scalar_end);
 
       return result;
    }
 
-   template<typename T, typename FieldT, multi_exp_method Method,
+   template<typename T, typename OT, multi_exp_method Method,
             typename std::enable_if<(Method == multi_exp_method_BDLO12), int>::type = 0>
    T multi_exp_inner(typename std::vector<T>::const_iterator bases,
                      typename std::vector<T>::const_iterator bases_end,
-                     typename std::vector<FieldT>::const_iterator exponents,
-                     typename std::vector<FieldT>::const_iterator exponents_end) {
+                     typename std::vector<OT>::const_iterator exponents,
+                     typename std::vector<OT>::const_iterator exponents_end) {
       UNUSED(exponents_end);
       size_t length = bases_end - bases;
 
@@ -1316,12 +1588,12 @@ typedef number NumberType;
       return result;
    }
 
-   template<typename T, typename FieldT, multi_exp_method Method,
+   template<typename T, typename OT, multi_exp_method Method,
             typename std::enable_if<(Method == multi_exp_method_bos_coster), int>::type = 0>
    T multi_exp_inner(typename std::vector<T>::const_iterator vec_start,
                      typename std::vector<T>::const_iterator vec_end,
-                     typename std::vector<FieldT>::const_iterator scalar_start,
-                     typename std::vector<FieldT>::const_iterator scalar_end) {
+                     typename std::vector<OT>::const_iterator scalar_start,
+                     typename std::vector<OT>::const_iterator scalar_end) {
          const mp_size_t n = std::remove_reference<decltype(*scalar_start)>::type::num_limbs;
 
          if (vec_start == vec_end) {
@@ -1340,7 +1612,7 @@ typedef number NumberType;
          g.reserve(odd_vec_len);
 
          typename std::vector<T>::const_iterator vec_it;
-         typename std::vector<FieldT>::const_iterator scalar_it;
+         typename std::vector<OT>::const_iterator scalar_it;
          size_t i;
          for (i = 0, vec_it = vec_start, scalar_it = scalar_start; vec_it != vec_end; ++vec_it, ++scalar_it, ++i) {
             g.emplace_back(*vec_it);
@@ -1425,16 +1697,16 @@ typedef number NumberType;
    * Input is split into the given number of chunks, and, when compiled with
    * MULTICORE, the chunks are processed in parallel.
    */
-   template<typename T, typename FieldT, multi_exp_method Method>
+   template<typename T, typename OT, multi_exp_method Method>
    T multi_exp(typename std::vector<T>::const_iterator vec_start,
                typename std::vector<T>::const_iterator vec_end,
-               typename std::vector<FieldT>::const_iterator scalar_start,
-               typename std::vector<FieldT>::const_iterator scalar_end,
+               typename std::vector<OT>::const_iterator scalar_start,
+               typename std::vector<OT>::const_iterator scalar_end,
                const size_t chunks) {
       const size_t total = vec_end - vec_start;
       if ((total < chunks) || (chunks == 1)) {
          // no need to split into "chunks", can call implementation directly
-         return multi_exp_inner<T, FieldT, Method>(vec_start, vec_end, scalar_start, scalar_end);
+         return multi_exp_inner<T, OT, Method>(vec_start, vec_end, scalar_start, scalar_end);
       }
 
       const size_t one = total / chunks;
@@ -1446,7 +1718,7 @@ typedef number NumberType;
 #endif
       for (size_t i = 0; i < chunks; ++i) {
          partial[i] =
-         multi_exp_inner<T, FieldT, Method>(vec_start + i * one,
+         multi_exp_inner<T, OT, Method>(vec_start + i * one,
                                              (i == chunks - 1 ? vec_end : vec_start + (i + 1) * one),
                                              scalar_start + i * one,
                                              (i == chunks - 1 ? scalar_end : scalar_start + (i + 1) * one));
@@ -1467,20 +1739,20 @@ typedef number NumberType;
    * Assumes input is in special form, and includes special pre-processing for
    * scalars equal to 0 or 1.
    */
-   template<typename T, typename FieldT, multi_exp_method Method>
+   template<typename T, typename OT, multi_exp_method Method>
    T multi_exp_with_mixed_addition(typename std::vector<T>::const_iterator vec_start,
                                     typename std::vector<T>::const_iterator vec_end,
-                                    typename std::vector<FieldT>::const_iterator scalar_start,
-                                    typename std::vector<FieldT>::const_iterator scalar_end,
+                                    typename std::vector<OT>::const_iterator scalar_start,
+                                    typename std::vector<OT>::const_iterator scalar_end,
                                     const size_t chunks) {
       assert(std::distance(vec_start, vec_end) == std::distance(scalar_start, scalar_end));
       enter_block("Process scalar vector");
       auto value_it = vec_start;
       auto scalar_it = scalar_start;
 
-      const FieldT zero = FieldT::zero();
-      const FieldT one = FieldT::one();
-      std::vector<FieldT> p;
+      const OT zero = OT::zero();
+      const OT one = OT::one();
+      std::vector<OT> p;
       std::vector<T> g;
 
       T acc = T::zero();
@@ -1518,7 +1790,7 @@ typedef number NumberType;
 
       leave_block("Process scalar vector");
 
-      return acc + multi_exp<T, FieldT, Method>(g.begin(), g.end(), p.begin(), p.end(), chunks);
+      return acc + multi_exp<T, OT, Method>(g.begin(), g.end(), p.begin(), p.end(), chunks);
    }
 
    /**
@@ -1605,11 +1877,11 @@ typedef number NumberType;
       return powers_of_g;
    }
 
-   template<typename T, typename FieldT>
+   template<typename T, typename OT>
    T windowed_exp(const size_t scalar_size,
                   const size_t window,
                   const window_table<T> &powers_of_g,
-                  const FieldT &pow) {
+                  const OT &pow) {
       const size_t outerc = (scalar_size + window - 1) / window;
       const NumberType pow_val = pow.as_bigint();
 
@@ -1630,11 +1902,11 @@ typedef number NumberType;
       return res;
    }
 
-   template<typename T, typename FieldT>
+   template<typename T, typename OT>
    std::vector<T> batch_exp(const size_t scalar_size,
                             const size_t window,
                             const window_table<T> &table,
-                            const std::vector<FieldT> &v) {
+                            const std::vector<OT> &v) {
       if (!inhibit_profiling_info) {
          print_indent();
       }
@@ -1659,12 +1931,12 @@ typedef number NumberType;
       return res;
    }
 
-   template<typename T, typename FieldT>
+   template<typename T, typename OT>
    std::vector<T> batch_exp_with_coeff(const size_t scalar_size,
                                        const size_t window,
                                        const window_table<T> &table,
-                                       const FieldT &coeff,
-                                       const std::vector<FieldT> &v) {
+                                       const OT &coeff,
+                                       const std::vector<OT> &v) {
       if (!inhibit_profiling_info) {
          print_indent();
       }
