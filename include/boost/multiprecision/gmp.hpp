@@ -266,7 +266,7 @@ struct gmp_float_imp
       if (m_data[0]._mp_d == 0)
          mpf_init2(m_data, multiprecision::detail::digits10_2_2(digits10 ? digits10 : (unsigned)get_default_precision()));
       if (s && (*s == '+'))
-         ++s;  // Leading "+" sign not supported by mpf_set_str:
+         ++s; // Leading "+" sign not supported by mpf_set_str:
       if (0 != mpf_set_str(m_data, s, 10))
          BOOST_THROW_EXCEPTION(std::runtime_error(std::string("The string \"") + s + std::string("\"could not be interpreted as a valid floating point number.")));
       return *this;
@@ -428,7 +428,7 @@ struct gmp_float_imp
    }
 
  protected:
-   mpf_t            m_data;
+   mpf_t                                                 m_data;
    static boost::multiprecision::detail::precision_type& get_default_precision() BOOST_NOEXCEPT
    {
       static boost::multiprecision::detail::precision_type val(50);
@@ -1124,48 +1124,56 @@ T opt_window_wnaf_exp(const T &base, const number<gmp_int> &scalar, const size_t
 }
 */
 
-template<typename T, typename OT>
-T multi_exp(typename std::vector<T>::const_iterator vec_start,
-            typename std::vector<T>::const_iterator vec_end, 
+template <typename T, typename OT>
+T multi_exp(typename std::vector<T>::const_iterator  vec_start,
+            typename std::vector<T>::const_iterator  vec_end,
             typename std::vector<OT>::const_iterator scalar_start,
             typename std::vector<OT>::const_iterator scalar_end,
-            const size_t num_groups, const size_t bucket_size, const size_t n) {
+            const size_t num_groups, const size_t bucket_size, const size_t n)
+{
    size_t chunk_len = (n / num_groups);
 
    std::vector<T> part_res(num_groups);
 
-   for (size_t j = 0; j < n; ++j) {
-      size_t start = j * chunk_len;
-      size_t end = min((cpp_int) start + chunk_len, (cpp_int) n);
+   for (size_t j = 0; j < n; ++j)
+   {
+      size_t start        = j * chunk_len;
+      size_t end          = min((cpp_int)start + chunk_len, (cpp_int)n);
       size_t bucket_start = bucket_size * j;
-      part_res[j] = multi_exp_subgroup (vec_start, scalar_start, start, end, bucket_size, bucket_start);
+      part_res[j]         = multi_exp_subgroup(vec_start, scalar_start, start, end, bucket_size, bucket_start);
    }
 
    return ResultAggregation(part_res);
 }
 
-template<typename T, typename OT>
-T multi_exp_subgroup(typename std::vector<T>::const_iterator vec_start,
+template <typename T, typename OT>
+T multi_exp_subgroup(typename std::vector<T>::const_iterator  vec_start,
                      typename std::vector<OT>::const_iterator scalar_start,
                      const size_t start, const size_t end, const size_t workers_amount,
-                     const size_t bucket_size, const size_t bucket_start) {
+                     const size_t bucket_size, const size_t bucket_start)
+{
    typename std::vector<T> part_sum(workers_amount, std::numeric_limits<double>::infinity());
 
-   for (size_t l = bucket_start; l <= bucket_start + bucket_size; ++l) {
-      for (size_t j = 0; j < workers_amount; ++j) {
+   for (size_t l = bucket_start; l <= bucket_start + bucket_size; ++l)
+   {
+      for (size_t j = 0; j < workers_amount; ++j)
+      {
          typename std::vector<T> buckets(bucket_size, std::numeric_limits<double>::infinity());
 
-         for (size_t i = start; i <= end; ++i) {
+         for (size_t i = start; i <= end; ++i)
+         {
             size_t idx = get_bits(*(scalar_start + i), bucket_start, bucket_size, "binary");
-            if (idx > 0) {
+            if (idx > 0)
+            {
                buckets[idx - 1] = buckets[idx - 1] + *(vec_start + i);
             }
          }
 
          size_t acc = std::numeric_limits<double>::infinity();
 
-         for (size_t i = 0; i <= bucket_size; ++i) {
-            acc = acc + buckets[i];
+         for (size_t i = 0; i <= bucket_size; ++i)
+         {
+            acc         = acc + buckets[i];
             part_sum[j] = part_sum[j] + acc;
          }
       }
@@ -1173,34 +1181,40 @@ T multi_exp_subgroup(typename std::vector<T>::const_iterator vec_start,
    return part_sum;
 }
 
-template<typename T, typename OT>
+template <typename T, typename OT>
 T get_bits(typename std::vector<OT>::const_iterator scalar_start,
-            const size_t start, const size_t end,
-            typename std::string repr) {
+           const size_t start, const size_t end,
+           typename std::string repr)
+{
    cpp_int base;
-   T res = 0;
+   T       res = 0;
 
-   if (repr == "binary") {
+   if (repr == "binary")
+   {
       base = 2;
    }
 
-   for (size_t i = start; i < end; ++i) {
+   for (size_t i = start; i < end; ++i)
+   {
       res = res + i * pow(base, i - start);
    }
    return res;
 }
 
-template<typename T> 
-T result_aggregation(typename std::vector<T> r, const size_t L) {
+template <typename T>
+T result_aggregation(typename std::vector<T> r, const size_t L)
+{
    typename std::vector<T> part_res(L, std::numeric_limits<double>::infinity());
 
-   for (size_t i = 0; i <= L ; ++i) {
+   for (size_t i = 0; i <= L; ++i)
+   {
       part_res[i] = sum_par(r, i);
    }
 
    size_t S = std::numeric_limits<double>::infinity();
 
-   for (size_t i = 0; i <= L - 1; ++i) {
+   for (size_t i = 0; i <= L - 1; ++i)
+   {
       S = S * 2;
       S = S + part_res[i];
    }
@@ -1208,30 +1222,37 @@ T result_aggregation(typename std::vector<T> r, const size_t L) {
    return S;
 }
 
-template<typename T>
-T sum_par(typename std::vector<T>::const_iterator vec_start, cpp_bin_float_100 n) {
-   size_t h = n / log(n);
+template <typename T>
+T sum_par(typename std::vector<T>::const_iterator vec_start, cpp_bin_float_100 n)
+{
+   size_t                  h = n / log(n);
    typename std::vector<T> part_res(h, std::numeric_limits<double>::infinity());
 
-   for (size_t i = 0; i <= h - 1; ++i) {
-      for (size_t j = 0; j <= log(n) - 1; ++j) {
+   for (size_t i = 0; i <= h - 1; ++i)
+   {
+      for (size_t j = 0; j <= log(n) - 1; ++j)
+      {
          part_res[i] = part_res[i] + *(vec_start + (i * log(n) + j));
       }
    }
 
    size_t parallel_boundary = ceil(log(n));
-   size_t m = ceil(n / log(n));
+   size_t m                 = ceil(n / log(n));
 
-   while (m > parallel_boundary) {
+   while (m > parallel_boundary)
+   {
       h = ceil(log((cpp_bin_float_100)(m)));
 
-      for (size_t i = 0; i <= (m / h) - 1; ++i) {
+      for (size_t i = 0; i <= (m / h) - 1; ++i)
+      {
          size_t d = h - 1;
-         if (i == (m / h) - 1) {
+         if (i == (m / h) - 1)
+         {
             d = m - 1 - i * h;
          }
 
-         for (size_t j = 1; j <= d; ++j) {
+         for (size_t j = 1; j <= d; ++j)
+         {
             part_res[i * h] = part_res[i * h] + part_res[i * h + j];
          }
          part_res[i] = part_res[i * h];
@@ -1240,7 +1261,8 @@ T sum_par(typename std::vector<T>::const_iterator vec_start, cpp_bin_float_100 n
       m = ceil((cpp_bin_float_100)(m / h));
    }
 
-   for (size_t i = 1; i <= m - 1; ++i) {
+   for (size_t i = 1; i <= m - 1; ++i)
+   {
       part_res[0] = part_res[0] + part_res[i];
    }
 
@@ -1572,8 +1594,8 @@ struct gmp_int
       if (m_data[0]._mp_d == 0)
          mpz_init(this->m_data);
       unsigned __int128 mask  = ((((1uLL << (std::numeric_limits<unsigned long>::digits - 1)) - 1) << 1) | 1uLL);
-      unsigned               shift = 0;
-      mpz_t                  t;
+      unsigned          shift = 0;
+      mpz_t             t;
       mpz_set_ui(m_data, 0);
       mpz_init_set_ui(t, 0);
       while (i)
@@ -2109,7 +2131,7 @@ inline void eval_convert_to(boost::ulong_long_type* result, const gmp_int& val)
       BOOST_THROW_EXCEPTION(std::range_error("Conversion from negative integer to an unsigned type results in undefined behaviour"));
    }
    *result = 0;
-   gmp_int t(val);
+   gmp_int  t(val);
    unsigned parts = sizeof(boost::ulong_long_type) / sizeof(unsigned long);
 
    for (unsigned i = 0; i < parts; ++i)
@@ -2124,10 +2146,10 @@ inline void eval_convert_to(boost::ulong_long_type* result, const gmp_int& val)
 }
 inline void eval_convert_to(boost::long_long_type* result, const gmp_int& val)
 {
-   int s = mpz_sgn(val.data());
+   int s   = mpz_sgn(val.data());
    *result = 0;
-   gmp_int t(val);
-   unsigned parts = sizeof(boost::ulong_long_type) / sizeof(unsigned long);
+   gmp_int                t(val);
+   unsigned               parts           = sizeof(boost::ulong_long_type) / sizeof(unsigned long);
    boost::ulong_long_type unsigned_result = 0;
 
    for (unsigned i = 0; i < parts; ++i)
@@ -2149,9 +2171,9 @@ inline void eval_convert_to(boost::long_long_type* result, const gmp_int& val)
    }
    if ((s > 0) && (unsigned_result > static_cast<boost::ulong_long_type>((std::numeric_limits<boost::long_long_type>::max)())))
       overflow = true;
-   if((s < 0) && (unsigned_result > 1u - static_cast<boost::ulong_long_type>((std::numeric_limits<boost::long_long_type>::min)() + 1)))
+   if ((s < 0) && (unsigned_result > 1u - static_cast<boost::ulong_long_type>((std::numeric_limits<boost::long_long_type>::min)() + 1)))
       overflow = true;
-   if(overflow)
+   if (overflow)
       *result = s < 0 ? (std::numeric_limits<boost::long_long_type>::min)() : (std::numeric_limits<boost::long_long_type>::max)();
    else
       *result = s < 0 ? -boost::long_long_type(unsigned_result - 1) - 1 : unsigned_result;
@@ -2165,7 +2187,7 @@ inline void eval_convert_to(unsigned __int128* result, const gmp_int& val)
       BOOST_THROW_EXCEPTION(std::range_error("Conversion from negative integer to an unsigned type results in undefined behaviour"));
    }
    *result = 0;
-   gmp_int t(val);
+   gmp_int  t(val);
    unsigned parts = sizeof(unsigned __int128) / sizeof(unsigned long);
 
    for (unsigned i = 0; i < parts; ++i)
@@ -2180,10 +2202,10 @@ inline void eval_convert_to(unsigned __int128* result, const gmp_int& val)
 }
 inline void eval_convert_to(__int128* result, const gmp_int& val)
 {
-   int s = mpz_sgn(val.data());
+   int s   = mpz_sgn(val.data());
    *result = 0;
-   gmp_int t(val);
-   unsigned parts = sizeof(unsigned __int128) / sizeof(unsigned long);
+   gmp_int           t(val);
+   unsigned          parts           = sizeof(unsigned __int128) / sizeof(unsigned long);
    unsigned __int128 unsigned_result = 0;
 
    for (unsigned i = 0; i < parts; ++i)
@@ -2200,7 +2222,7 @@ inline void eval_convert_to(__int128* result, const gmp_int& val)
    //
    static const __int128 int128_max = static_cast<__int128>((static_cast<unsigned __int128>(1u) << 127) - 1);
    static const __int128 int128_min = (static_cast<unsigned __int128>(1u) << 127);
-   bool overflow = false;
+   bool                  overflow   = false;
    if (mpz_sgn(t.data()))
    {
       overflow = true;
@@ -2708,14 +2730,14 @@ inline void eval_convert_to(__float128* result, const gmp_rational& val)
 {
    using default_ops::eval_convert_to;
 
-   gmp_int n, d;
+   gmp_int    n, d;
    __float128 fn, fd;
    mpz_set(n.data(), mpq_numref(val.data()));
    mpz_set(d.data(), mpq_denref(val.data()));
 
    eval_convert_to(&fn, n);
    eval_convert_to(&fd, d);
-   
+
    *result = fn / fd;
 }
 #endif

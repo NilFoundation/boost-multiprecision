@@ -120,7 +120,7 @@ struct bits_of<float128_type>
    static const unsigned value = 113;
 };
 
-}
+} // namespace detail
 
 #endif
 
@@ -182,8 +182,8 @@ struct float128_backend
    float128_type m_value;
 
  public:
-   BOOST_CONSTEXPR   float128_backend() BOOST_NOEXCEPT : m_value(0) {}
-   BOOST_CONSTEXPR   float128_backend(const float128_backend& o) BOOST_NOEXCEPT : m_value(o.m_value) {}
+   BOOST_CONSTEXPR          float128_backend() BOOST_NOEXCEPT : m_value(0) {}
+   BOOST_CONSTEXPR          float128_backend(const float128_backend& o) BOOST_NOEXCEPT : m_value(o.m_value) {}
    BOOST_MP_CXX14_CONSTEXPR float128_backend& operator=(const float128_backend& o) BOOST_NOEXCEPT
    {
       m_value = o.m_value;
@@ -232,7 +232,7 @@ struct float128_backend
       // We don't call std::swap here because it's no constexpr (yet):
       float128_type t(o.value());
       o.value() = m_value;
-      m_value = t;
+      m_value   = t;
    }
    std::string str(std::streamsize digits, std::ios_base::fmtflags f) const
    {
@@ -410,30 +410,33 @@ inline void eval_sqrt(float128_backend& result, const float128_backend& arg)
 inline void eval_rsqrt(float128_backend& result, const float128_backend& arg)
 {
    using std::sqrt;
-   if (arg.value() < std::numeric_limits<long double>::denorm_min() || arg.value() > (std::numeric_limits<long double>::max)()) {
-      result.value() = 1/sqrtq(arg.value());
+   if (arg.value() < std::numeric_limits<long double>::denorm_min() || arg.value() > (std::numeric_limits<long double>::max)())
+   {
+      result.value() = 1 / sqrtq(arg.value());
       return;
    }
-   float128_backend xk = 1/sqrt(static_cast<long double>(arg.value()));
+   float128_backend xk = 1 / sqrt(static_cast<long double>(arg.value()));
 
    // Newton iteration for f(x) = arg.value() - 1/x^2.
-   BOOST_IF_CONSTEXPR (sizeof(long double) == sizeof(double)) {
-       // If the long double is the same as a double, then we need two Newton iterations:
-       xk.value() = xk.value() + xk.value()*(1-arg.value()*xk.value()*xk.value())/2;
-       result.value() = xk.value() + xk.value()*(1-arg.value()*xk.value()*xk.value())/2;
-       return;
+   BOOST_IF_CONSTEXPR(sizeof(long double) == sizeof(double))
+   {
+      // If the long double is the same as a double, then we need two Newton iterations:
+      xk.value()     = xk.value() + xk.value() * (1 - arg.value() * xk.value() * xk.value()) / 2;
+      result.value() = xk.value() + xk.value() * (1 - arg.value() * xk.value() * xk.value()) / 2;
+      return;
    }
 
    // 80 bit long double only needs a single iteration to produce ~2ULPs.
-   result.value() = xk.value() + xk.value()*(1-arg.value()*xk.value()*xk.value())/2;
+   result.value() = xk.value() + xk.value() * (1 - arg.value() * xk.value() * xk.value()) / 2;
    return;
 }
 #ifndef BOOST_MP_NO_CONSTEXPR_DETECTION
-inline BOOST_MP_CXX14_CONSTEXPR 
+inline BOOST_MP_CXX14_CONSTEXPR
 #else
 inline
 #endif
-int eval_fpclassify(const float128_backend& arg)
+    int
+    eval_fpclassify(const float128_backend& arg)
 {
    float128_type v = arg.value();
 #ifndef BOOST_MP_NO_CONSTEXPR_DETECTION
@@ -684,7 +687,7 @@ inline boost::multiprecision::number<float128_backend, ExpressionTemplates> lgam
 template <boost::multiprecision::expression_template_option ExpressionTemplates>
 inline boost::multiprecision::number<float128_backend, ExpressionTemplates> tgamma BOOST_PREVENT_MACRO_SUBSTITUTION(const boost::multiprecision::number<float128_backend, ExpressionTemplates>& arg)
 {
-   if(eval_signbit(arg.backend()) != 0)
+   if (eval_signbit(arg.backend()) != 0)
    {
       const bool result_is_neg = ((static_cast<unsigned long long>(floorq(-arg.backend().value())) % 2U) == 0U);
 
@@ -805,38 +808,38 @@ class numeric_limits<boost::multiprecision::number<boost::multiprecision::backen
    typedef boost::multiprecision::number<boost::multiprecision::backends::float128_backend, ExpressionTemplates> number_type;
 
  public:
-   BOOST_STATIC_CONSTEXPR bool is_specialized = true;
-   static BOOST_MP_CXX14_CONSTEXPR number_type(min)() BOOST_NOEXCEPT { return BOOST_MP_QUAD_MIN; }
-   static BOOST_MP_CXX14_CONSTEXPR number_type(max)() BOOST_NOEXCEPT { return BOOST_MP_QUAD_MAX; }
-   static BOOST_MP_CXX14_CONSTEXPR number_type          lowest() BOOST_NOEXCEPT { return -(max)(); }
-   BOOST_STATIC_CONSTEXPR int  digits       = 113;
-   BOOST_STATIC_CONSTEXPR int  digits10     = 33;
-   BOOST_STATIC_CONSTEXPR int  max_digits10 = 36;
-   BOOST_STATIC_CONSTEXPR bool is_signed    = true;
-   BOOST_STATIC_CONSTEXPR bool is_integer   = false;
-   BOOST_STATIC_CONSTEXPR bool is_exact     = false;
-   BOOST_STATIC_CONSTEXPR int  radix        = 2;
-   static BOOST_MP_CXX14_CONSTEXPR number_type          epsilon() { return 1.92592994438723585305597794258492732e-34; /* this double value has only one bit set and so is exact */ }
-   static BOOST_MP_CXX14_CONSTEXPR number_type          round_error() { return 0.5; }
-   BOOST_STATIC_CONSTEXPR int  min_exponent                  = -16381;
-   BOOST_STATIC_CONSTEXPR int  min_exponent10                = min_exponent * 301L / 1000L;
-   BOOST_STATIC_CONSTEXPR int  max_exponent                  = 16384;
-   BOOST_STATIC_CONSTEXPR int  max_exponent10                = max_exponent * 301L / 1000L;
-   BOOST_STATIC_CONSTEXPR bool has_infinity                  = true;
-   BOOST_STATIC_CONSTEXPR bool has_quiet_NaN                 = true;
-   BOOST_STATIC_CONSTEXPR bool has_signaling_NaN             = false;
-   BOOST_STATIC_CONSTEXPR float_denorm_style has_denorm      = denorm_present;
-   BOOST_STATIC_CONSTEXPR bool               has_denorm_loss = true;
-   static BOOST_MP_CXX14_CONSTEXPR number_type                        infinity() { return HUGE_VAL; /* conversion from double infinity OK */ }
-   static BOOST_MP_CXX14_CONSTEXPR number_type                        quiet_NaN() { return number_type("nan"); }
-   static BOOST_MP_CXX14_CONSTEXPR number_type                        signaling_NaN() { return 0; }
-   static BOOST_MP_CXX14_CONSTEXPR number_type                        denorm_min() { return BOOST_MP_QUAD_DENORM_MIN; }
-   BOOST_STATIC_CONSTEXPR bool               is_iec559       = true;
-   BOOST_STATIC_CONSTEXPR bool               is_bounded      = true;
-   BOOST_STATIC_CONSTEXPR bool               is_modulo       = false;
-   BOOST_STATIC_CONSTEXPR bool               traps           = false;
-   BOOST_STATIC_CONSTEXPR bool               tinyness_before = false;
-   BOOST_STATIC_CONSTEXPR float_round_style round_style      = round_to_nearest;
+   BOOST_STATIC_CONSTEXPR bool                 is_specialized = true;
+   static BOOST_MP_CXX14_CONSTEXPR             number_type(min)() BOOST_NOEXCEPT { return BOOST_MP_QUAD_MIN; }
+   static BOOST_MP_CXX14_CONSTEXPR             number_type(max)() BOOST_NOEXCEPT { return BOOST_MP_QUAD_MAX; }
+   static BOOST_MP_CXX14_CONSTEXPR number_type lowest() BOOST_NOEXCEPT { return -(max)(); }
+   BOOST_STATIC_CONSTEXPR int                  digits       = 113;
+   BOOST_STATIC_CONSTEXPR int                  digits10     = 33;
+   BOOST_STATIC_CONSTEXPR int                  max_digits10 = 36;
+   BOOST_STATIC_CONSTEXPR bool                 is_signed    = true;
+   BOOST_STATIC_CONSTEXPR bool                 is_integer   = false;
+   BOOST_STATIC_CONSTEXPR bool                 is_exact     = false;
+   BOOST_STATIC_CONSTEXPR int                  radix        = 2;
+   static BOOST_MP_CXX14_CONSTEXPR number_type epsilon() { return 1.92592994438723585305597794258492732e-34; /* this double value has only one bit set and so is exact */ }
+   static BOOST_MP_CXX14_CONSTEXPR number_type round_error() { return 0.5; }
+   BOOST_STATIC_CONSTEXPR int                  min_exponent      = -16381;
+   BOOST_STATIC_CONSTEXPR int                  min_exponent10    = min_exponent * 301L / 1000L;
+   BOOST_STATIC_CONSTEXPR int                  max_exponent      = 16384;
+   BOOST_STATIC_CONSTEXPR int                  max_exponent10    = max_exponent * 301L / 1000L;
+   BOOST_STATIC_CONSTEXPR bool                 has_infinity      = true;
+   BOOST_STATIC_CONSTEXPR bool                 has_quiet_NaN     = true;
+   BOOST_STATIC_CONSTEXPR bool                 has_signaling_NaN = false;
+   BOOST_STATIC_CONSTEXPR float_denorm_style   has_denorm        = denorm_present;
+   BOOST_STATIC_CONSTEXPR bool                 has_denorm_loss   = true;
+   static BOOST_MP_CXX14_CONSTEXPR number_type infinity() { return HUGE_VAL; /* conversion from double infinity OK */ }
+   static BOOST_MP_CXX14_CONSTEXPR number_type quiet_NaN() { return number_type("nan"); }
+   static BOOST_MP_CXX14_CONSTEXPR number_type signaling_NaN() { return 0; }
+   static BOOST_MP_CXX14_CONSTEXPR number_type denorm_min() { return BOOST_MP_QUAD_DENORM_MIN; }
+   BOOST_STATIC_CONSTEXPR bool                 is_iec559       = true;
+   BOOST_STATIC_CONSTEXPR bool                 is_bounded      = true;
+   BOOST_STATIC_CONSTEXPR bool                 is_modulo       = false;
+   BOOST_STATIC_CONSTEXPR bool                 traps           = false;
+   BOOST_STATIC_CONSTEXPR bool                 tinyness_before = false;
+   BOOST_STATIC_CONSTEXPR float_round_style    round_style     = round_to_nearest;
 };
 
 template <boost::multiprecision::expression_template_option ExpressionTemplates>

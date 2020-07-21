@@ -134,7 +134,7 @@ struct scoped_default_precision<R, true>
    }
    ~scoped_default_precision()
    {
-      if(m_new_prec != m_old_prec)
+      if (m_new_prec != m_old_prec)
          R::default_precision(m_old_prec);
    }
    BOOST_MP_CXX14_CONSTEXPR unsigned precision() const
@@ -177,8 +177,7 @@ inline BOOST_MP_CXX14_CONSTEXPR void maybe_promote_precision(T* obj)
 
 #ifndef BOOST_NO_CXX17_IF_CONSTEXPR
 #define BOOST_MP_CONSTEXPR_IF_VARIABLE_PRECISION(T) \
-   if                                               \
-   constexpr(boost::multiprecision::detail::is_variable_precision<T>::value)
+   if constexpr (boost::multiprecision::detail::is_variable_precision<T>::value)
 #else
 #define BOOST_MP_CONSTEXPR_IF_VARIABLE_PRECISION(T) if (boost::multiprecision::detail::is_variable_precision<T>::value)
 #endif

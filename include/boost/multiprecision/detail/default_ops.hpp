@@ -885,7 +885,7 @@ struct terminal
       value = val;
       return *this;
    }
-   R value;
+   R                        value;
    BOOST_MP_CXX14_CONSTEXPR operator R() const { return value; }
 };
 
@@ -1186,7 +1186,7 @@ inline BOOST_MP_CXX14_CONSTEXPR typename enable_if<is_arithmetic<A>, void>::type
    typedef typename boost::multiprecision::detail::canonical<A, T>::type          canonical_type;
    typedef typename mpl::if_<is_same<A, canonical_type>, T, canonical_type>::type cast_type;
    cast_type                                                                      c = cast_type();
-   c = a;
+   c                                                                                = a;
    eval_remquo(result, x, c, pi);
 }
 template <class T, class A>
@@ -1195,7 +1195,7 @@ inline BOOST_MP_CXX14_CONSTEXPR typename enable_if<is_arithmetic<A>, void>::type
    typedef typename boost::multiprecision::detail::canonical<A, T>::type          canonical_type;
    typedef typename mpl::if_<is_same<A, canonical_type>, T, canonical_type>::type cast_type;
    cast_type                                                                      c = cast_type();
-   c = x;
+   c                                                                                = x;
    eval_remquo(result, c, a, pi);
 }
 template <class T, class U, class V>
@@ -2110,7 +2110,7 @@ BOOST_MP_CXX14_CONSTEXPR typename complex_result_from_scalar<number<Backend, Exp
 
 template <class tag, class A1, class A2, class A3, class A4, class Backend, expression_template_option ExpressionTemplates>
 BOOST_MP_CXX14_CONSTEXPR typename enable_if_c<boost::is_same<typename detail::expression<tag, A1, A2, A3, A4>::result_type, number<Backend, ExpressionTemplates> >::value,
-                     typename complex_result_from_scalar<number<Backend, ExpressionTemplates> >::type>::type
+                                              typename complex_result_from_scalar<number<Backend, ExpressionTemplates> >::type>::type
 polar(detail::expression<tag, A1, A2, A3, A4> const& r, number<Backend, ExpressionTemplates> const& theta)
 {
    return typename complex_result_from_scalar<number<Backend, ExpressionTemplates> >::type(number<Backend, ExpressionTemplates>(r * cos(theta)), number<Backend, ExpressionTemplates>(r * sin(theta)));
@@ -2118,7 +2118,7 @@ polar(detail::expression<tag, A1, A2, A3, A4> const& r, number<Backend, Expressi
 
 template <class Backend, expression_template_option ExpressionTemplates, class tag, class A1, class A2, class A3, class A4>
 BOOST_MP_CXX14_CONSTEXPR typename enable_if_c<boost::is_same<typename detail::expression<tag, A1, A2, A3, A4>::result_type, number<Backend, ExpressionTemplates> >::value,
-                     typename complex_result_from_scalar<number<Backend, ExpressionTemplates> >::type>::type
+                                              typename complex_result_from_scalar<number<Backend, ExpressionTemplates> >::type>::type
 polar(number<Backend, ExpressionTemplates> const& r, detail::expression<tag, A1, A2, A3, A4> const& theta)
 {
    return typename complex_result_from_scalar<number<Backend, ExpressionTemplates> >::type(number<Backend, ExpressionTemplates>(r * cos(theta)), number<Backend, ExpressionTemplates>(r * sin(theta)));
@@ -2126,7 +2126,7 @@ polar(number<Backend, ExpressionTemplates> const& r, detail::expression<tag, A1,
 
 template <class tag, class A1, class A2, class A3, class A4, class tagb, class A1b, class A2b, class A3b, class A4b>
 BOOST_MP_CXX14_CONSTEXPR typename enable_if_c<boost::is_same<typename detail::expression<tag, A1, A2, A3, A4>::result_type, typename detail::expression<tagb, A1b, A2b, A3b, A4b>::result_type>::value,
-                     typename complex_result_from_scalar<typename detail::expression<tag, A1, A2, A3, A4>::result_type>::type>::type
+                                              typename complex_result_from_scalar<typename detail::expression<tag, A1, A2, A3, A4>::result_type>::type>::type
 polar(detail::expression<tag, A1, A2, A3, A4> const& r, detail::expression<tagb, A1b, A2b, A3b, A4b> const& theta)
 {
    typedef typename detail::expression<tag, A1, A2, A3, A4>::result_type scalar_type;
@@ -2144,7 +2144,7 @@ polar(Scalar const& r, number<Backend, ExpressionTemplates> const& theta)
 
 template <class tag, class A1, class A2, class A3, class A4, class Scalar>
 BOOST_MP_CXX14_CONSTEXPR typename enable_if_c<boost::is_arithmetic<Scalar>::value,
-                     typename complex_result_from_scalar<typename detail::expression<tag, A1, A2, A3, A4>::result_type>::type>::type
+                                              typename complex_result_from_scalar<typename detail::expression<tag, A1, A2, A3, A4>::result_type>::type>::type
 polar(Scalar const& r, detail::expression<tag, A1, A2, A3, A4> const& theta)
 {
    typedef typename detail::expression<tag, A1, A2, A3, A4>::result_type scalar_type;
@@ -3450,8 +3450,8 @@ struct proj_funct
 
 template <class tag, class A1, class A2, class A3, class A4>
 inline BOOST_MP_CXX14_CONSTEXPR typename boost::disable_if_c<number_category<typename detail::expression<tag, A1, A2, A3, A4>::result_type>::value == number_kind_complex,
-                                    detail::expression<
-                                        detail::function, detail::abs_funct<typename detail::backend_type<detail::expression<tag, A1, A2, A3, A4> >::type>, detail::expression<tag, A1, A2, A3, A4> > >::type
+                                                             detail::expression<
+                                                                 detail::function, detail::abs_funct<typename detail::backend_type<detail::expression<tag, A1, A2, A3, A4> >::type>, detail::expression<tag, A1, A2, A3, A4> > >::type
 abs(const detail::expression<tag, A1, A2, A3, A4>& arg)
 {
    return detail::expression<
@@ -3460,8 +3460,8 @@ abs(const detail::expression<tag, A1, A2, A3, A4>& arg)
 }
 template <class Backend>
 inline BOOST_MP_CXX14_CONSTEXPR typename disable_if_c<number_category<Backend>::value == number_kind_complex,
-                             detail::expression<
-                                 detail::function, detail::abs_funct<Backend>, number<Backend, et_on> > >::type
+                                                      detail::expression<
+                                                          detail::function, detail::abs_funct<Backend>, number<Backend, et_on> > >::type
 abs(const number<Backend, et_on>& arg)
 {
    return detail::expression<

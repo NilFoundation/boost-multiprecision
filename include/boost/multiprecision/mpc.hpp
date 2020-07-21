@@ -317,7 +317,7 @@ struct mpc_complex_imp
    }
 
  protected:
-   mpc_t            m_data;
+   mpc_t                                                 m_data;
    static boost::multiprecision::detail::precision_type& get_default_precision() BOOST_NOEXCEPT
    {
       static boost::multiprecision::detail::precision_type val(BOOST_MULTIPRECISION_MPFI_DEFAULT_PRECISION);

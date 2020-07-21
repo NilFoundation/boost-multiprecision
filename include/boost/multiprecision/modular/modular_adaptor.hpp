@@ -60,7 +60,6 @@ class modular_adaptor
 #endif
    modular_adaptor(const Backend& val, const modular_params<Backend>& mod) : m_mod(mod), m_base(mod.create_internal_representation(val))
    {
-
    }
 
    modular_adaptor(const Backend& val, const Backend& mod)
@@ -82,7 +81,7 @@ class modular_adaptor
    modular_adaptor& operator=(const modular_adaptor& o)
    {
       m_base = o.base_data();
-      m_mod = o.mod_data();
+      m_mod  = o.mod_data();
       return *this;
    }
 
@@ -367,9 +366,9 @@ inline void find_modular_pow(modular_adaptor<Backend>&       result,
    //   result = x.backend();
 
    using default_ops::eval_bit_set;
+   using default_ops::eval_convert_to;
    using default_ops::eval_decrement;
    using default_ops::eval_multiply;
-   using default_ops::eval_convert_to;
 
    typedef number<modular_adaptor<Backend> > modular_type;
    modular_params<Backend>                   mod = b.mod_data();
@@ -381,8 +380,8 @@ inline void find_modular_pow(modular_adaptor<Backend>&       result,
    std::vector<modular_type> m_g(1U << m_window_bits);
    modular_type*             p_g = m_g.data();
    modular_type              x(1, mod);
-   Backend nibble = exp;
-   Backend mask;
+   Backend                   nibble = exp;
+   Backend                   mask;
    eval_bit_set(mask, m_window_bits);
    eval_decrement(mask);
    *p_g = x;
@@ -394,7 +393,7 @@ inline void find_modular_pow(modular_adaptor<Backend>&       result,
       eval_multiply((*p_g).backend(), m_g[i - 1].backend(), b);
       ++p_g;
    }
-   size_t exp_nibbles = (exp_bits + 1 + m_window_bits - 1) / m_window_bits;
+   size_t              exp_nibbles = (exp_bits + 1 + m_window_bits - 1) / m_window_bits;
    std::vector<size_t> exp_index;
 
    for (size_t i = 0; i < exp_nibbles; ++i)

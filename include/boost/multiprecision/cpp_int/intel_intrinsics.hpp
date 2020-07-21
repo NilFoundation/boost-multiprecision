@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////
 //  Copyright 2020 Madhur Chauhan.
-//  Copyright 2020 John Maddock. 
+//  Copyright 2020 John Maddock.
 //  Distributed under the Boost
 //  Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt
@@ -38,15 +38,15 @@
 //
 #if defined(__has_builtin) && !defined(BOOST_INTEL)
 
-# if __has_builtin(__builtin_ia32_addcarryx_u64)
-#  define BOOST_MP_ADDC __builtin_ia32_addcarryx_u
-# endif
+#if __has_builtin(__builtin_ia32_addcarryx_u64)
+#define BOOST_MP_ADDC __builtin_ia32_addcarryx_u
+#endif
 
-# if __has_builtin(__builtin_ia32_subborrow_u64)
-#  define BOOST_MP_SUBB __builtin_ia32_subborrow_u
-# elif __has_builtin(__builtin_ia32_sbb_u64)
-#  define BOOST_MP_SUBB __builtin_ia32_sbb_u
-# endif
+#if __has_builtin(__builtin_ia32_subborrow_u64)
+#define BOOST_MP_SUBB __builtin_ia32_subborrow_u
+#elif __has_builtin(__builtin_ia32_sbb_u64)
+#define BOOST_MP_SUBB __builtin_ia32_sbb_u
+#endif
 
 #endif
 

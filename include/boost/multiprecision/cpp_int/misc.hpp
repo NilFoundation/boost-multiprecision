@@ -33,8 +33,8 @@ template <class R>
 struct numeric_limits_workaround<R, false>
 {
    BOOST_STATIC_CONSTEXPR unsigned digits = ~static_cast<R>(0) < 0 ? sizeof(R) * CHAR_BIT - 1 : sizeof(R) * CHAR_BIT;
-   static BOOST_CONSTEXPR R (min)(){ return (static_cast<R>(-1) < 0) ? static_cast<R>(1) << digits : 0; }
-   static BOOST_CONSTEXPR R (max)() { return (static_cast<R>(-1) < 0) ? ~(static_cast<R>(1) << digits) : ~static_cast<R>(0); }
+   static BOOST_CONSTEXPR          R(min)() { return (static_cast<R>(-1) < 0) ? static_cast<R>(1) << digits : 0; }
+   static BOOST_CONSTEXPR          R(max)() { return (static_cast<R>(-1) < 0) ? ~(static_cast<R>(1) << digits) : ~static_cast<R>(0); }
 };
 
 template <class R, class CppInt>
@@ -97,10 +97,9 @@ eval_convert_to(R* result, const cpp_int_backend<MinBits1, MaxBits1, SignType1, 
       else
          *result = static_cast<R>(backend.limbs()[0]);
    }
-   else
-      *result = static_cast<R>(backend.limbs()[0]);
-   unsigned shift = cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::limb_bits;
-   unsigned i     = 1;
+   else*    result = static_cast<R>(backend.limbs()[0]);
+   unsigned shift  = cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::limb_bits;
+   unsigned i      = 1;
    BOOST_IF_CONSTEXPR(numeric_limits_workaround<R>::digits > cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::limb_bits)
    {
       while ((i < backend.size()) && (shift < static_cast<unsigned>(numeric_limits_workaround<R>::digits - cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::limb_bits)))
@@ -354,9 +353,9 @@ eval_integer_modulus(const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checke
 {
    if ((sizeof(Integer) <= sizeof(limb_type)) || (mod <= (std::numeric_limits<limb_type>::max)()))
    {
-      const int              n = a.size();
+      const int              n         = a.size();
       const double_limb_type two_n_mod = static_cast<limb_type>(1u) + (~static_cast<limb_type>(0u) - mod) % mod;
-      limb_type              res = a.limbs()[n - 1] % mod;
+      limb_type              res       = a.limbs()[n - 1] % mod;
 
       for (int i = n - 2; i >= 0; --i)
          res = static_cast<limb_type>((res * two_n_mod + a.limbs()[i]) % mod);
@@ -431,7 +430,7 @@ eval_gcd(
    {
       eval_modulus(result, a, b);
       limb_type& res = *result.limbs();
-      res = eval_gcd(res, b);
+      res            = eval_gcd(res, b);
    }
    result.sign(false);
 }
@@ -453,7 +452,7 @@ eval_gcd(
       return;
    }
    double_limb_type res = 0;
-   if(a.sign() == 0)
+   if (a.sign() == 0)
       res = eval_integer_modulus(a, b);
    else
    {
@@ -461,16 +460,16 @@ eval_gcd(
       t.negate();
       res = eval_integer_modulus(t, b);
    }
-   res            = eval_gcd(res, b);
+   res    = eval_gcd(res, b);
    result = res;
    result.sign(false);
 }
 template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1>
 inline BOOST_MP_CXX14_CONSTEXPR typename enable_if_c<!is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value>::type
 eval_gcd(
-   cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& result,
-   const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& a,
-   signed_double_limb_type                                                     v)
+    cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>&       result,
+    const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& a,
+    signed_double_limb_type                                                     v)
 {
    eval_gcd(result, a, static_cast<double_limb_type>(v < 0 ? -v : v));
 }
@@ -520,7 +519,7 @@ eval_gcd(
 // two N bit numbers.
 //
 // The original double-digit version of the algorithm is described in:
-// 
+//
 // "A Double Digit Lehmer-Euclid Algorithm for Finding the GCD of Long Integers",
 // Tudor Jebelean, J Symbolic Computation, 1995 (19), 145.
 //
@@ -741,7 +740,7 @@ void eval_gcd_lehmer(cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Al
    //
    // Extract the leading 2*bits_per_limb bits from U and V:
    //
-   unsigned  h = lu % bits_per_limb;
+   unsigned h = lu % bits_per_limb;
    double_limb_type u, v;
    if (h)
    {
@@ -765,9 +764,9 @@ void eval_gcd_lehmer(cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Al
    //
    // However we track only absolute values here:
    //
-   limb_type x[3] = { 1, 0 };
-   limb_type y[3] = { 0, 1 };
-   unsigned  i = 0;
+   limb_type x[3] = {1, 0};
+   limb_type y[3] = {0, 1};
+   unsigned i = 0;
 
 #ifdef BOOST_MP_GCD_DEBUG
    cpp_int UU, VV;
@@ -977,9 +976,9 @@ void eval_gcd_lehmer(cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Al
 template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1>
 inline BOOST_MP_CXX14_CONSTEXPR typename enable_if_c<!is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value>::type
 eval_gcd(
-   cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& result,
-   const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& a,
-   const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& b)
+    cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>&       result,
+    const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& a,
+    const cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>& b)
 {
    using default_ops::eval_get_sign;
    using default_ops::eval_is_zero;
@@ -995,7 +994,7 @@ eval_gcd(
       eval_gcd(result, a, *b.limbs());
       return;
    }
-   unsigned temp_size = (std::max)(a.size(), b.size()) + 1;
+   unsigned                                                                                             temp_size = (std::max)(a.size(), b.size()) + 1;
    typename cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>::scoped_shared_storage storage(a, temp_size * 6);
 
    cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> U(storage, temp_size);
@@ -1029,8 +1028,8 @@ eval_gcd(
    //
    // Remove common factors of 2:
    //
-   unsigned us = eval_lsb(U);
-   unsigned vs = eval_lsb(V);
+   unsigned us    = eval_lsb(U);
+   unsigned vs    = eval_lsb(V);
    int      shift = (std::min)(us, vs);
    if (us)
       eval_right_shift(U, us);
@@ -1055,7 +1054,7 @@ eval_gcd(
          {
             double_limb_type i = U.limbs()[0] | (static_cast<double_limb_type>(U.limbs()[1]) << sizeof(limb_type) * CHAR_BIT);
             double_limb_type j = (V.size() == 1) ? *V.limbs() : V.limbs()[0] | (static_cast<double_limb_type>(V.limbs()[1]) << sizeof(limb_type) * CHAR_BIT);
-            U = eval_gcd(i, j);
+            U                  = eval_gcd(i, j);
          }
          break;
       }

@@ -333,7 +333,7 @@ struct mpfi_float_imp
    }
 
  protected:
-   mpfi_t           m_data;
+   mpfi_t                                                m_data;
    static boost::multiprecision::detail::precision_type& get_default_precision() BOOST_NOEXCEPT
    {
       static boost::multiprecision::detail::precision_type val(BOOST_MULTIPRECISION_MPFI_DEFAULT_PRECISION);
@@ -1656,15 +1656,15 @@ class numeric_limits<boost::multiprecision::number<boost::multiprecision::mpfi_f
       }
       return value.second;
    }
-   BOOST_STATIC_CONSTEXPR long min_exponent                  = MPFR_EMIN_DEFAULT;
-   BOOST_STATIC_CONSTEXPR long min_exponent10                = (MPFR_EMIN_DEFAULT / 1000) * 301L;
-   BOOST_STATIC_CONSTEXPR long max_exponent                  = MPFR_EMAX_DEFAULT;
-   BOOST_STATIC_CONSTEXPR long max_exponent10                = (MPFR_EMAX_DEFAULT / 1000) * 301L;
-   BOOST_STATIC_CONSTEXPR bool has_infinity                  = true;
-   BOOST_STATIC_CONSTEXPR bool has_quiet_NaN                 = true;
-   BOOST_STATIC_CONSTEXPR bool has_signaling_NaN             = false;
-   BOOST_STATIC_CONSTEXPR float_denorm_style has_denorm      = denorm_absent;
-   BOOST_STATIC_CONSTEXPR bool               has_denorm_loss = false;
+   BOOST_STATIC_CONSTEXPR long               min_exponent      = MPFR_EMIN_DEFAULT;
+   BOOST_STATIC_CONSTEXPR long               min_exponent10    = (MPFR_EMIN_DEFAULT / 1000) * 301L;
+   BOOST_STATIC_CONSTEXPR long               max_exponent      = MPFR_EMAX_DEFAULT;
+   BOOST_STATIC_CONSTEXPR long               max_exponent10    = (MPFR_EMAX_DEFAULT / 1000) * 301L;
+   BOOST_STATIC_CONSTEXPR bool               has_infinity      = true;
+   BOOST_STATIC_CONSTEXPR bool               has_quiet_NaN     = true;
+   BOOST_STATIC_CONSTEXPR bool               has_signaling_NaN = false;
+   BOOST_STATIC_CONSTEXPR float_denorm_style has_denorm        = denorm_absent;
+   BOOST_STATIC_CONSTEXPR bool               has_denorm_loss   = false;
    static number_type                        infinity()
    {
       initializer.do_nothing();
@@ -1695,13 +1695,13 @@ class numeric_limits<boost::multiprecision::number<boost::multiprecision::mpfi_f
    {
       return number_type(0);
    }
-   BOOST_STATIC_CONSTEXPR number_type denorm_min() { return number_type(0); }
-   BOOST_STATIC_CONSTEXPR bool        is_iec559         = false;
-   BOOST_STATIC_CONSTEXPR bool        is_bounded        = true;
-   BOOST_STATIC_CONSTEXPR bool        is_modulo         = false;
-   BOOST_STATIC_CONSTEXPR bool        traps             = true;
-   BOOST_STATIC_CONSTEXPR bool        tinyness_before   = false;
-   BOOST_STATIC_CONSTEXPR float_round_style round_style = round_to_nearest;
+   BOOST_STATIC_CONSTEXPR number_type       denorm_min() { return number_type(0); }
+   BOOST_STATIC_CONSTEXPR bool              is_iec559       = false;
+   BOOST_STATIC_CONSTEXPR bool              is_bounded      = true;
+   BOOST_STATIC_CONSTEXPR bool              is_modulo       = false;
+   BOOST_STATIC_CONSTEXPR bool              traps           = true;
+   BOOST_STATIC_CONSTEXPR bool              tinyness_before = false;
+   BOOST_STATIC_CONSTEXPR float_round_style round_style     = round_to_nearest;
 
  private:
    struct data_initializer
@@ -1781,25 +1781,25 @@ class numeric_limits<boost::multiprecision::number<boost::multiprecision::mpfi_f
    BOOST_STATIC_CONSTEXPR bool is_specialized = false;
    static number_type(min)() { return number_type(0); }
    static number_type(max)() { return number_type(0); }
-   static number_type          lowest() { return number_type(0); }
-   BOOST_STATIC_CONSTEXPR int  digits       = 0;
-   BOOST_STATIC_CONSTEXPR int  digits10     = 0;
-   BOOST_STATIC_CONSTEXPR int  max_digits10 = 0;
-   BOOST_STATIC_CONSTEXPR bool is_signed    = false;
-   BOOST_STATIC_CONSTEXPR bool is_integer   = false;
-   BOOST_STATIC_CONSTEXPR bool is_exact     = false;
-   BOOST_STATIC_CONSTEXPR int  radix        = 0;
-   static number_type          epsilon() { return number_type(0); }
-   static number_type          round_error() { return number_type(0); }
-   BOOST_STATIC_CONSTEXPR int  min_exponent                  = 0;
-   BOOST_STATIC_CONSTEXPR int  min_exponent10                = 0;
-   BOOST_STATIC_CONSTEXPR int  max_exponent                  = 0;
-   BOOST_STATIC_CONSTEXPR int  max_exponent10                = 0;
-   BOOST_STATIC_CONSTEXPR bool has_infinity                  = false;
-   BOOST_STATIC_CONSTEXPR bool has_quiet_NaN                 = false;
-   BOOST_STATIC_CONSTEXPR bool has_signaling_NaN             = false;
-   BOOST_STATIC_CONSTEXPR float_denorm_style has_denorm      = denorm_absent;
-   BOOST_STATIC_CONSTEXPR bool               has_denorm_loss = false;
+   static number_type                        lowest() { return number_type(0); }
+   BOOST_STATIC_CONSTEXPR int                digits       = 0;
+   BOOST_STATIC_CONSTEXPR int                digits10     = 0;
+   BOOST_STATIC_CONSTEXPR int                max_digits10 = 0;
+   BOOST_STATIC_CONSTEXPR bool               is_signed    = false;
+   BOOST_STATIC_CONSTEXPR bool               is_integer   = false;
+   BOOST_STATIC_CONSTEXPR bool               is_exact     = false;
+   BOOST_STATIC_CONSTEXPR int                radix        = 0;
+   static number_type                        epsilon() { return number_type(0); }
+   static number_type                        round_error() { return number_type(0); }
+   BOOST_STATIC_CONSTEXPR int                min_exponent      = 0;
+   BOOST_STATIC_CONSTEXPR int                min_exponent10    = 0;
+   BOOST_STATIC_CONSTEXPR int                max_exponent      = 0;
+   BOOST_STATIC_CONSTEXPR int                max_exponent10    = 0;
+   BOOST_STATIC_CONSTEXPR bool               has_infinity      = false;
+   BOOST_STATIC_CONSTEXPR bool               has_quiet_NaN     = false;
+   BOOST_STATIC_CONSTEXPR bool               has_signaling_NaN = false;
+   BOOST_STATIC_CONSTEXPR float_denorm_style has_denorm        = denorm_absent;
+   BOOST_STATIC_CONSTEXPR bool               has_denorm_loss   = false;
    static number_type                        infinity() { return number_type(0); }
    static number_type                        quiet_NaN() { return number_type(0); }
    static number_type                        signaling_NaN() { return number_type(0); }
@@ -1809,7 +1809,7 @@ class numeric_limits<boost::multiprecision::number<boost::multiprecision::mpfi_f
    BOOST_STATIC_CONSTEXPR bool               is_modulo       = false;
    BOOST_STATIC_CONSTEXPR bool               traps           = false;
    BOOST_STATIC_CONSTEXPR bool               tinyness_before = false;
-   BOOST_STATIC_CONSTEXPR float_round_style round_style      = round_toward_zero;
+   BOOST_STATIC_CONSTEXPR float_round_style  round_style     = round_toward_zero;
 };
 
 #ifndef BOOST_NO_INCLASS_MEMBER_INITIALIZATION

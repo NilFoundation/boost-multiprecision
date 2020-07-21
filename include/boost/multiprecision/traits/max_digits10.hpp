@@ -42,7 +42,7 @@ struct calc_digits10
    static constexpr unsigned digits_10(unsigned d)
    {
       //
-      // We need floor(log10(2) * (d-1)), see: 
+      // We need floor(log10(2) * (d-1)), see:
       // https://www.exploringbinary.com/number-of-digits-required-for-round-trip-conversions/
       // and references therein.
       //

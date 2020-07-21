@@ -424,7 +424,7 @@ class cpp_bin_float
    {
       return assign_float(f.backend());
    }
-   
+
    template <class I>
    typename boost::enable_if<is_integral<I>, cpp_bin_float&>::type operator=(const I& i)
    {
@@ -662,8 +662,7 @@ inline void do_eval_add(cpp_bin_float<Digits, DigitBase, Allocator, Exponent, Mi
    // Special cases first:
    switch (a.exponent())
    {
-   case cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_zero:
-   {
+   case cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_zero: {
       bool s     = a.sign();
       res        = b;
       res.sign() = s;
@@ -865,8 +864,7 @@ inline void eval_multiply(cpp_bin_float<Digits, DigitBase, Allocator, Exponent, 
    // Special cases first:
    switch (a.exponent())
    {
-   case cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_zero:
-   {
+   case cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_zero: {
       if (b.exponent() == cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_nan)
          res = b;
       else if (b.exponent() == cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_infinity)
@@ -953,8 +951,7 @@ inline typename enable_if_c<is_unsigned<U>::value>::type eval_multiply(cpp_bin_f
    // Special cases first:
    switch (a.exponent())
    {
-   case cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_zero:
-   {
+   case cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_zero: {
       bool s     = a.sign();
       res        = a;
       res.sign() = s;
@@ -1019,8 +1016,7 @@ inline void eval_divide(cpp_bin_float<Digits, DigitBase, Allocator, Exponent, Mi
    //
    switch (u.exponent())
    {
-   case cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_zero:
-   {
+   case cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_zero: {
       switch (v.exponent())
       {
       case cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_zero:
@@ -1033,8 +1029,7 @@ inline void eval_divide(cpp_bin_float<Digits, DigitBase, Allocator, Exponent, Mi
       res.sign() = s;
       return;
    }
-   case cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_infinity:
-   {
+   case cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_infinity: {
       switch (v.exponent())
       {
       case cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_infinity:
@@ -1053,8 +1048,7 @@ inline void eval_divide(cpp_bin_float<Digits, DigitBase, Allocator, Exponent, Mi
    }
    switch (v.exponent())
    {
-   case cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_zero:
-   {
+   case cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_zero: {
       bool s     = u.sign() != v.sign();
       res        = std::numeric_limits<number<cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE> > >::infinity().backend();
       res.sign() = s;
@@ -1188,8 +1182,7 @@ inline typename enable_if_c<is_unsigned<U>::value>::type eval_divide(cpp_bin_flo
    //
    switch (u.exponent())
    {
-   case cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_zero:
-   {
+   case cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE>::exponent_zero: {
       if (v == 0)
       {
          res = std::numeric_limits<number<cpp_bin_float<Digits, DigitBase, Allocator, Exponent, MinE, MaxE> > >::quiet_NaN().backend();
@@ -1937,9 +1930,9 @@ class numeric_limits<boost::multiprecision::number<boost::multiprecision::cpp_bi
    BOOST_STATIC_CONSTEXPR bool                                                                                                             has_infinity      = true;
    BOOST_STATIC_CONSTEXPR bool                                                                                                             has_quiet_NaN     = true;
    BOOST_STATIC_CONSTEXPR bool                                                                                                             has_signaling_NaN = false;
-   BOOST_STATIC_CONSTEXPR float_denorm_style has_denorm                                                                                                      = denorm_absent;
-   BOOST_STATIC_CONSTEXPR bool               has_denorm_loss                                                                                                 = false;
-   static number_type                        infinity()
+   BOOST_STATIC_CONSTEXPR float_denorm_style                                                                                               has_denorm        = denorm_absent;
+   BOOST_STATIC_CONSTEXPR bool                                                                                                             has_denorm_loss   = false;
+   static number_type                                                                                                                      infinity()
    {
       initializer.do_nothing();
       static std::pair<bool, number_type> value;
@@ -1965,13 +1958,13 @@ class numeric_limits<boost::multiprecision::number<boost::multiprecision::cpp_bi
    {
       return number_type(0);
    }
-   BOOST_STATIC_CONSTEXPR number_type denorm_min() { return number_type(0); }
-   BOOST_STATIC_CONSTEXPR bool        is_iec559         = false;
-   BOOST_STATIC_CONSTEXPR bool        is_bounded        = true;
-   BOOST_STATIC_CONSTEXPR bool        is_modulo         = false;
-   BOOST_STATIC_CONSTEXPR bool        traps             = true;
-   BOOST_STATIC_CONSTEXPR bool        tinyness_before   = false;
-   BOOST_STATIC_CONSTEXPR float_round_style round_style = round_to_nearest;
+   BOOST_STATIC_CONSTEXPR number_type       denorm_min() { return number_type(0); }
+   BOOST_STATIC_CONSTEXPR bool              is_iec559       = false;
+   BOOST_STATIC_CONSTEXPR bool              is_bounded      = true;
+   BOOST_STATIC_CONSTEXPR bool              is_modulo       = false;
+   BOOST_STATIC_CONSTEXPR bool              traps           = true;
+   BOOST_STATIC_CONSTEXPR bool              tinyness_before = false;
+   BOOST_STATIC_CONSTEXPR float_round_style round_style     = round_to_nearest;
 
  private:
    struct data_initializer

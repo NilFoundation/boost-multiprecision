@@ -230,7 +230,7 @@ BOOST_FORCEINLINE BOOST_MP_CXX14_CONSTEXPR unsigned find_lsb(Unsigned mask)
    }
    else
 #endif
-   return find_lsb(static_cast<ui_type>(mask), tag_type());
+      return find_lsb(static_cast<ui_type>(mask), tag_type());
 }
 template <class Unsigned>
 BOOST_FORCEINLINE BOOST_MP_CXX14_CONSTEXPR unsigned find_msb(Unsigned mask)

@@ -137,9 +137,9 @@ struct combine_value_to_pack<value_pack<first, ARGS...>, value>
 template <char NextChar, char... CHARS>
 struct pack_values
 {
-   static constexpr unsigned chars_per_limb = sizeof(limb_type) * CHAR_BIT / 4;
-   static constexpr unsigned shift          = ((sizeof...(CHARS)) % chars_per_limb) * 4;
-   static constexpr limb_type value_to_add  = shift ? hex_value<NextChar>::value << shift : hex_value<NextChar>::value;
+   static constexpr unsigned  chars_per_limb = sizeof(limb_type) * CHAR_BIT / 4;
+   static constexpr unsigned  shift          = ((sizeof...(CHARS)) % chars_per_limb) * 4;
+   static constexpr limb_type value_to_add   = shift ? hex_value<NextChar>::value << shift : hex_value<NextChar>::value;
 
    typedef typename pack_values<CHARS...>::type                          recursive_packed_type;
    typedef typename boost::mpl::if_c<shift == 0,
@@ -208,8 +208,8 @@ struct make_packed_value_from_str
 template <class Pack, class B>
 struct make_backend_from_pack
 {
-   static constexpr Pack p  = {};
-   static constexpr B value = p;
+   static constexpr Pack p     = {};
+   static constexpr B    value = p;
 };
 
 template <class Pack, class B>

@@ -342,10 +342,10 @@ class numeric_limits<boost::multiprecision::number<boost::multiprecision::ration
    typedef boost::multiprecision::number<boost::multiprecision::rational_adaptor<IntBackend> > number_type;
 
  public:
-   BOOST_STATIC_CONSTEXPR bool is_integer = false;
-   BOOST_STATIC_CONSTEXPR bool is_exact   = true;
-   BOOST_STATIC_CONSTEXPR      number_type(min)() { return (base_type::min)(); }
-   BOOST_STATIC_CONSTEXPR      number_type(max)() { return (base_type::max)(); }
+   BOOST_STATIC_CONSTEXPR bool        is_integer = false;
+   BOOST_STATIC_CONSTEXPR bool        is_exact   = true;
+   BOOST_STATIC_CONSTEXPR             number_type(min)() { return (base_type::min)(); }
+   BOOST_STATIC_CONSTEXPR             number_type(max)() { return (base_type::max)(); }
    BOOST_STATIC_CONSTEXPR number_type lowest() { return -(max)(); }
    BOOST_STATIC_CONSTEXPR number_type epsilon() { return base_type::epsilon(); }
    BOOST_STATIC_CONSTEXPR number_type round_error() { return epsilon() / 2; }

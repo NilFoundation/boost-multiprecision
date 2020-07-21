@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////
-//  Copyright 2020 Madhur Chauhan. 
+//  Copyright 2020 Madhur Chauhan.
 //  Copyright 2020 John Maddock. Distributed under the Boost
 //  Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt
@@ -166,7 +166,6 @@ inline BOOST_MP_CXX14_CONSTEXPR void subtract_unsigned_constexpr(CppInt1& result
       result.negate();
 }
 
-
 #ifdef BOOST_MP_HAS_IMMINTRIN_H
 //
 // This is the key addition routine where all the argument types are non-trivial cpp_int's:
@@ -217,7 +216,7 @@ inline BOOST_MP_CXX14_CONSTEXPR void add_unsigned(CppInt1& result, const CppInt2
       if (as < bs)
          swap(pa, pb);
       // First where a and b overlap:
-      unsigned      i = 0;
+      unsigned      i     = 0;
       unsigned char carry = 0;
 #if defined(BOOST_MSVC) && !defined(BOOST_HAS_INT128) && defined(_M_X64)
       //
@@ -272,14 +271,14 @@ inline BOOST_MP_CXX14_CONSTEXPR void subtract_unsigned(CppInt1& result, const Cp
       using std::swap;
 
       // Nothing fancy, just let uintmax_t take the strain:
-      unsigned         m(0), x(0);
+      unsigned m(0), x(0);
       minmax(a.size(), b.size(), m, x);
       //
       // special cases for small limb counts:
       //
       if (x == 1)
       {
-         bool      s = a.sign();
+         bool      s  = a.sign();
          limb_type al = *a.limbs();
          limb_type bl = *b.limbs();
          if (bl > al)
@@ -297,9 +296,9 @@ inline BOOST_MP_CXX14_CONSTEXPR void subtract_unsigned(CppInt1& result, const Cp
       // Set up the result vector:
       result.resize(x, x);
       // Now that a, b, and result are stable, get pointers to their limbs:
-      typename CppInt2::const_limb_pointer pa = a.limbs();
-      typename CppInt3::const_limb_pointer pb = b.limbs();
-      typename CppInt1::limb_pointer       pr = result.limbs();
+      typename CppInt2::const_limb_pointer pa      = a.limbs();
+      typename CppInt3::const_limb_pointer pb      = b.limbs();
+      typename CppInt1::limb_pointer       pr      = result.limbs();
       bool                                 swapped = false;
       if (c < 0)
       {
@@ -312,7 +311,7 @@ inline BOOST_MP_CXX14_CONSTEXPR void subtract_unsigned(CppInt1& result, const Cp
          return;
       }
 
-      unsigned i = 0;
+      unsigned      i      = 0;
       unsigned char borrow = 0;
       // First where a and b overlap:
 #if defined(BOOST_MSVC) && !defined(BOOST_HAS_INT128) && defined(_M_X64)
@@ -328,7 +327,7 @@ inline BOOST_MP_CXX14_CONSTEXPR void subtract_unsigned(CppInt1& result, const Cp
          borrow = _subborrow_u64(borrow, *reinterpret_cast<const unsigned long long*>(pa + i + 6), *reinterpret_cast<const unsigned long long*>(pb + i + 6), reinterpret_cast<unsigned long long*>(pr + i + 6));
       }
 #else
-      for(; i + 4 <= m; i += 4)
+      for (; i + 4 <= m; i += 4)
       {
          borrow = boost::multiprecision::detail::subborrow_limb(borrow, pa[i], pb[i], pr + i);
          borrow = boost::multiprecision::detail::subborrow_limb(borrow, pa[i + 1], pb[i + 1], pr + i + 1);
@@ -357,7 +356,7 @@ inline BOOST_MP_CXX14_CONSTEXPR void subtract_unsigned(CppInt1& result, const Cp
       result.sign(a.sign());
       if (swapped)
          result.negate();
-   }  // constepxr.
+   } // constepxr.
 }
 
 #else
@@ -376,9 +375,6 @@ inline BOOST_MP_CXX14_CONSTEXPR void subtract_unsigned(CppInt1& result, const Cp
 
 #endif
 
-} } }  // namespaces
-
+}}} // namespace boost::multiprecision::backends
 
 #endif
-
-

@@ -503,8 +503,7 @@ inline void eval_pow(T& result, const T& x, const T& a)
       case FP_NAN:
          result = a;
          break;
-      case FP_NORMAL:
-      {
+      case FP_NORMAL: {
          // Need to check for a an odd integer as a special case:
          try
          {

@@ -142,11 +142,11 @@ inline BOOST_CONSTEXPR typename boost::enable_if_c<number_category<Arithmetic>::
    return false;
 }
 template <class Arithmetic>
-inline 
+inline
 #ifndef BOOST_MP_NO_CONSTEXPR_DETECTION
-    BOOST_MP_CXX14_CONSTEXPR 
+    BOOST_MP_CXX14_CONSTEXPR
 #endif
-   typename boost::enable_if_c < number_category < Arithmetic> ::value == number_kind_floating_point, bool> ::type
+    typename boost::enable_if_c<number_category<Arithmetic>::value == number_kind_floating_point, bool>::type
     is_unordered_value(const Arithmetic& a)
 {
 #ifndef BOOST_MP_NO_CONSTEXPR_DETECTION
@@ -562,7 +562,7 @@ inline BOOST_MP_CXX14_CONSTEXPR typename enable_if_c<detail::is_valid_mixed_comp
     BOOST_PREVENT_MACRO_SUBSTITUTION(const detail::expression<Tag, A1, A2, A3, A4>& a, const Arithmetic& b) { return a > b; }
 
 template <class Tag, class A1, class A2, class A3, class A4, class Tagb, class A1b, class A2b, class A3b, class A4b>
-inline BOOST_MP_CXX14_CONSTEXPR  typename enable_if<is_same<typename detail::expression<Tag, A1, A2, A3, A4>::result_type, typename detail::expression<Tagb, A1b, A2b, A3b, A4b>::result_type>, bool>::type
+inline BOOST_MP_CXX14_CONSTEXPR typename enable_if<is_same<typename detail::expression<Tag, A1, A2, A3, A4>::result_type, typename detail::expression<Tagb, A1b, A2b, A3b, A4b>::result_type>, bool>::type
     isgreater
     BOOST_PREVENT_MACRO_SUBSTITUTION(const detail::expression<Tag, A1, A2, A3, A4>& a, const detail::expression<Tagb, A1b, A2b, A3b, A4b>& b) { return a > b; }
 

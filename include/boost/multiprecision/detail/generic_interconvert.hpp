@@ -596,7 +596,6 @@ void generic_interconvert(To& to, const From& from, const mpl::int_<number_kind_
    from.mod_data().adjust_regular(to, from.base_data());
 }
 
-
 }
 }
 } // namespace boost::multiprecision::detail

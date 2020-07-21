@@ -63,9 +63,9 @@ class barrett_params : public base_params<Backend>
       using default_ops::eval_bit_set;
       using default_ops::eval_decrement;
       using default_ops::eval_lt;
+      using default_ops::eval_msb;
       using default_ops::eval_multiply;
       using default_ops::eval_subtract;
-      using default_ops::eval_msb;
 
       if (eval_lt(result, this->m_mod.backend()))
       {

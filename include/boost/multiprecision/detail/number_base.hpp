@@ -22,12 +22,7 @@
 #pragma warning(pop)
 #endif
 
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES) || defined(BOOST_NO_CXX11_TEMPLATE_ALIASES) || defined(BOOST_NO_CXX11_HDR_ARRAY)\
-      || defined(BOOST_NO_CXX11_ALLOCATOR) || defined(BOOST_NO_CXX11_UNIFIED_INITIALIZATION_SYNTAX) || defined(BOOST_NO_CXX11_CONSTEXPR)\
-      || defined(BOOST_MP_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS) || defined(BOOST_NO_CXX11_REF_QUALIFIERS) || defined(BOOST_NO_CXX11_HDR_FUNCTIONAL)\
-      || defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_NO_CXX11_USER_DEFINED_LITERALS) || defined(BOOST_NO_CXX11_THREAD_LOCAL)\
-      || defined(BOOST_NO_CXX11_DECLTYPE) || defined(BOOST_NO_CXX11_STATIC_ASSERT) || defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)\
-      || defined(BOOST_NO_CXX11_NOEXCEPT) || defined(BOOST_NO_CXX11_REF_QUALIFIERS)
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES) || defined(BOOST_NO_CXX11_TEMPLATE_ALIASES) || defined(BOOST_NO_CXX11_HDR_ARRAY) || defined(BOOST_NO_CXX11_ALLOCATOR) || defined(BOOST_NO_CXX11_UNIFIED_INITIALIZATION_SYNTAX) || defined(BOOST_NO_CXX11_CONSTEXPR) || defined(BOOST_MP_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS) || defined(BOOST_NO_CXX11_REF_QUALIFIERS) || defined(BOOST_NO_CXX11_HDR_FUNCTIONAL) || defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_NO_CXX11_USER_DEFINED_LITERALS) || defined(BOOST_NO_CXX11_THREAD_LOCAL) || defined(BOOST_NO_CXX11_DECLTYPE) || defined(BOOST_NO_CXX11_STATIC_ASSERT) || defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) || defined(BOOST_NO_CXX11_NOEXCEPT) || defined(BOOST_NO_CXX11_REF_QUALIFIERS)
 //
 // The above list includes everything we use, plus a few we're likely to use soon.
 // As from March 2020, C++03 support is deprecated, and as from March 2021 will be removed,
@@ -68,13 +63,13 @@
 #endif
 
 #ifdef __has_include
-# if __has_include(<version>)
-#  include <version>
-#  ifdef __cpp_lib_is_constant_evaluated
-#   include <type_traits>
-#   define BOOST_MP_HAS_IS_CONSTANT_EVALUATED
-#  endif
-# endif
+#if __has_include(<version>)
+#include <version>
+#ifdef __cpp_lib_is_constant_evaluated
+#include <type_traits>
+#define BOOST_MP_HAS_IS_CONSTANT_EVALUATED
+#endif
+#endif
 #endif
 
 #ifdef __has_builtin
@@ -86,23 +81,23 @@
 // MSVC also supports __builtin_is_constant_evaluated if it's recent enough:
 //
 #if defined(_MSC_FULL_VER) && (_MSC_FULL_VER >= 192528326)
-#  define BOOST_MP_HAS_BUILTIN_IS_CONSTANT_EVALUATED
+#define BOOST_MP_HAS_BUILTIN_IS_CONSTANT_EVALUATED
 #endif
 //
 // As does GCC-9:
 //
 #if defined(BOOST_GCC) && !defined(BOOST_NO_CXX14_CONSTEXPR) && (__GNUC__ >= 9) && !defined(BOOST_MP_HAS_BUILTIN_IS_CONSTANT_EVALUATED)
-#  define BOOST_MP_HAS_BUILTIN_IS_CONSTANT_EVALUATED
+#define BOOST_MP_HAS_BUILTIN_IS_CONSTANT_EVALUATED
 #endif
 
 #if defined(BOOST_MP_HAS_IS_CONSTANT_EVALUATED) && !defined(BOOST_NO_CXX14_CONSTEXPR)
-#  define BOOST_MP_IS_CONST_EVALUATED(x) std::is_constant_evaluated()
+#define BOOST_MP_IS_CONST_EVALUATED(x) std::is_constant_evaluated()
 #elif defined(BOOST_MP_HAS_BUILTIN_IS_CONSTANT_EVALUATED)
-#  define BOOST_MP_IS_CONST_EVALUATED(x) __builtin_is_constant_evaluated()
+#define BOOST_MP_IS_CONST_EVALUATED(x) __builtin_is_constant_evaluated()
 #elif !defined(BOOST_NO_CXX14_CONSTEXPR) && defined(BOOST_GCC) && (__GNUC__ >= 6)
-#  define BOOST_MP_IS_CONST_EVALUATED(x) __builtin_constant_p(x)
+#define BOOST_MP_IS_CONST_EVALUATED(x) __builtin_constant_p(x)
 #else
-#  define BOOST_MP_NO_CONSTEXPR_DETECTION
+#define BOOST_MP_NO_CONSTEXPR_DETECTION
 #endif
 
 #define BOOST_MP_CXX14_CONSTEXPR BOOST_CXX14_CONSTEXPR
@@ -128,9 +123,9 @@
 #endif
 
 #ifdef BOOST_MP_NO_CONSTEXPR_DETECTION
-#  define BOOST_CXX14_CONSTEXPR_IF_DETECTION
+#define BOOST_CXX14_CONSTEXPR_IF_DETECTION
 #else
-#  define BOOST_CXX14_CONSTEXPR_IF_DETECTION constexpr
+#define BOOST_CXX14_CONSTEXPR_IF_DETECTION constexpr
 #endif
 
 #ifdef BOOST_MSVC
@@ -523,7 +518,7 @@ struct expression<tag, Arg1, void, void, void>
    typedef tag                             tag_type;
 
    explicit BOOST_MP_CXX14_CONSTEXPR expression(const Arg1& a) : arg(a) {}
-   BOOST_MP_CXX14_CONSTEXPR expression(const expression& e) : arg(e.arg) {}
+   BOOST_MP_CXX14_CONSTEXPR          expression(const expression& e) : arg(e.arg) {}
 
 #ifndef BOOST_NO_CXX11_STATIC_ASSERT
    //
@@ -708,7 +703,7 @@ struct expression<terminal, Arg1, void, void, void>
    typedef terminal     tag_type;
 
    explicit BOOST_MP_CXX14_CONSTEXPR expression(const Arg1& a) : arg(a) {}
-   BOOST_MP_CXX14_CONSTEXPR expression(const expression& e) : arg(e.arg) {}
+   BOOST_MP_CXX14_CONSTEXPR          expression(const expression& e) : arg(e.arg) {}
 
 #ifndef BOOST_NO_CXX11_STATIC_ASSERT
    //
@@ -1009,7 +1004,7 @@ struct expression<tag, Arg1, Arg2, void, void>
    {
       return left_type(arg1);
    }
-   BOOST_MP_CXX14_CONSTEXPR right_type  right() const { return right_type(arg2); }
+   BOOST_MP_CXX14_CONSTEXPR right_type right() const { return right_type(arg2); }
    BOOST_MP_CXX14_CONSTEXPR const Arg1& left_ref() const BOOST_NOEXCEPT { return arg1; }
    BOOST_MP_CXX14_CONSTEXPR const Arg2& right_ref() const BOOST_NOEXCEPT { return arg2; }
 
@@ -1414,10 +1409,10 @@ struct expression
    BOOST_MP_CXX14_CONSTEXPR left_middle_type  left_middle() const { return left_middle_type(arg2); }
    BOOST_MP_CXX14_CONSTEXPR right_middle_type right_middle() const { return right_middle_type(arg3); }
    BOOST_MP_CXX14_CONSTEXPR right_type        right() const { return right_type(arg4); }
-   BOOST_MP_CXX14_CONSTEXPR const Arg1&       left_ref() const BOOST_NOEXCEPT { return arg1; }
-   BOOST_MP_CXX14_CONSTEXPR const Arg2&       left_middle_ref() const BOOST_NOEXCEPT { return arg2; }
-   BOOST_MP_CXX14_CONSTEXPR const Arg3&       right_middle_ref() const BOOST_NOEXCEPT { return arg3; }
-   BOOST_MP_CXX14_CONSTEXPR const Arg4&       right_ref() const BOOST_NOEXCEPT { return arg4; }
+   BOOST_MP_CXX14_CONSTEXPR const Arg1& left_ref() const BOOST_NOEXCEPT { return arg1; }
+   BOOST_MP_CXX14_CONSTEXPR const Arg2& left_middle_ref() const BOOST_NOEXCEPT { return arg2; }
+   BOOST_MP_CXX14_CONSTEXPR const Arg3& right_middle_ref() const BOOST_NOEXCEPT { return arg3; }
+   BOOST_MP_CXX14_CONSTEXPR const Arg4& right_ref() const BOOST_NOEXCEPT { return arg4; }
 
 #ifndef BOOST_MP_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS
 #if (defined(__GNUC__) && (__GNUC__ == 4) && (__GNUC_MINOR__ < 7) && !defined(__clang__)) || (defined(BOOST_INTEL) && (BOOST_INTEL <= 1500))
@@ -1753,36 +1748,37 @@ template <class Backend, expression_template_option ExpressionTemplates>
 struct is_interval_number<number<Backend, ExpressionTemplates> > : public is_interval_number<Backend>
 {};
 
-} // namespace multiprecision
-} // namespace boost
+}
+} // namespace boost::multiprecision
 
 namespace boost { namespace math {
-   namespace tools {
+namespace tools {
 
-      template <class T>
-      struct promote_arg;
+template <class T>
+struct promote_arg;
 
-      template <class tag, class A1, class A2, class A3, class A4>
-      struct promote_arg<boost::multiprecision::detail::expression<tag, A1, A2, A3, A4> >
-      {
-         typedef typename boost::multiprecision::detail::expression<tag, A1, A2, A3, A4>::result_type type;
-      };
+template <class tag, class A1, class A2, class A3, class A4>
+struct promote_arg<boost::multiprecision::detail::expression<tag, A1, A2, A3, A4> >
+{
+   typedef typename boost::multiprecision::detail::expression<tag, A1, A2, A3, A4>::result_type type;
+};
 
-      template <class R, class B, boost::multiprecision::expression_template_option ET>
-      inline R real_cast(const boost::multiprecision::number<B, ET>& val)
-      {
-         return val.template convert_to<R>();
-      }
+template <class R, class B, boost::multiprecision::expression_template_option ET>
+inline R real_cast(const boost::multiprecision::number<B, ET>& val)
+{
+   return val.template convert_to<R>();
+}
 
-      template <class R, class tag, class A1, class A2, class A3, class A4>
-      inline R real_cast(const boost::multiprecision::detail::expression<tag, A1, A2, A3, A4>& val)
-      {
-         typedef typename boost::multiprecision::detail::expression<tag, A1, A2, A3, A4>::result_type val_type;
-         return val_type(val).template convert_to<R>();
-      }
+template <class R, class tag, class A1, class A2, class A3, class A4>
+inline R real_cast(const boost::multiprecision::detail::expression<tag, A1, A2, A3, A4>& val)
+{
+   typedef typename boost::multiprecision::detail::expression<tag, A1, A2, A3, A4>::result_type val_type;
+   return val_type(val).template convert_to<R>();
+}
 
-      template <class B, boost::multiprecision::expression_template_option ET>
-      struct is_complex_type<boost::multiprecision::number<B, ET> > : public boost::mpl::bool_<boost::multiprecision::number_category<B>::value == boost::multiprecision::number_kind_complex> {};
+template <class B, boost::multiprecision::expression_template_option ET>
+struct is_complex_type<boost::multiprecision::number<B, ET> > : public boost::mpl::bool_<boost::multiprecision::number_category<B>::value == boost::multiprecision::number_kind_complex>
+{};
 
 } // namespace tools
 

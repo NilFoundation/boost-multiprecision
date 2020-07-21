@@ -367,7 +367,7 @@ class cpp_dec_float
 
    static const cpp_dec_float& long_double_max()
    {
-       linit.do_nothing();
+      linit.do_nothing();
 #ifdef BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
       static cpp_dec_float val(static_cast<long double>((std::numeric_limits<double>::max)()));
 #else
@@ -488,8 +488,8 @@ class cpp_dec_float
    }
 
    // Comparison functions
-   bool isnan BOOST_PREVENT_MACRO_SUBSTITUTION() const { return (fpclass == cpp_dec_float_NaN); }
-   bool isinf BOOST_PREVENT_MACRO_SUBSTITUTION() const { return (fpclass == cpp_dec_float_inf); }
+   bool isnan    BOOST_PREVENT_MACRO_SUBSTITUTION() const { return (fpclass == cpp_dec_float_NaN); }
+   bool isinf    BOOST_PREVENT_MACRO_SUBSTITUTION() const { return (fpclass == cpp_dec_float_inf); }
    bool isfinite BOOST_PREVENT_MACRO_SUBSTITUTION() const { return (fpclass == cpp_dec_float_finite); }
 
    bool iszero() const
@@ -2292,7 +2292,7 @@ typename boost::enable_if_c<boost::is_floating_point<Float>::value, cpp_dec_floa
    if ((boost::math::isnan)(a))
       return *this = nan();
 
-   int         e;
+   int   e;
    Float f, term;
    *this = zero();
 
@@ -3054,16 +3054,16 @@ template <unsigned Digits10, class ExponentType, class Allocator, boost::multipr
 class numeric_limits<boost::multiprecision::number<boost::multiprecision::cpp_dec_float<Digits10, ExponentType, Allocator>, ExpressionTemplates> >
 {
  public:
-   BOOST_STATIC_CONSTEXPR bool is_specialized                      = true;
-   BOOST_STATIC_CONSTEXPR bool is_signed                           = true;
-   BOOST_STATIC_CONSTEXPR bool is_integer                          = false;
-   BOOST_STATIC_CONSTEXPR bool is_exact                            = false;
-   BOOST_STATIC_CONSTEXPR bool is_bounded                          = true;
-   BOOST_STATIC_CONSTEXPR bool is_modulo                           = false;
-   BOOST_STATIC_CONSTEXPR bool is_iec559                           = false;
-   BOOST_STATIC_CONSTEXPR int  digits                              = boost::multiprecision::cpp_dec_float<Digits10, ExponentType, Allocator>::cpp_dec_float_digits10;
-   BOOST_STATIC_CONSTEXPR int  digits10                            = boost::multiprecision::cpp_dec_float<Digits10, ExponentType, Allocator>::cpp_dec_float_digits10;
-   BOOST_STATIC_CONSTEXPR int  max_digits10                        = boost::multiprecision::cpp_dec_float<Digits10, ExponentType, Allocator>::cpp_dec_float_total_digits10;
+   BOOST_STATIC_CONSTEXPR bool         is_specialized              = true;
+   BOOST_STATIC_CONSTEXPR bool         is_signed                   = true;
+   BOOST_STATIC_CONSTEXPR bool         is_integer                  = false;
+   BOOST_STATIC_CONSTEXPR bool         is_exact                    = false;
+   BOOST_STATIC_CONSTEXPR bool         is_bounded                  = true;
+   BOOST_STATIC_CONSTEXPR bool         is_modulo                   = false;
+   BOOST_STATIC_CONSTEXPR bool         is_iec559                   = false;
+   BOOST_STATIC_CONSTEXPR int          digits                      = boost::multiprecision::cpp_dec_float<Digits10, ExponentType, Allocator>::cpp_dec_float_digits10;
+   BOOST_STATIC_CONSTEXPR int          digits10                    = boost::multiprecision::cpp_dec_float<Digits10, ExponentType, Allocator>::cpp_dec_float_digits10;
+   BOOST_STATIC_CONSTEXPR int          max_digits10                = boost::multiprecision::cpp_dec_float<Digits10, ExponentType, Allocator>::cpp_dec_float_total_digits10;
    BOOST_STATIC_CONSTEXPR ExponentType min_exponent                = boost::multiprecision::cpp_dec_float<Digits10, ExponentType, Allocator>::cpp_dec_float_min_exp;   // Type differs from int.
    BOOST_STATIC_CONSTEXPR ExponentType min_exponent10              = boost::multiprecision::cpp_dec_float<Digits10, ExponentType, Allocator>::cpp_dec_float_min_exp10; // Type differs from int.
    BOOST_STATIC_CONSTEXPR ExponentType max_exponent                = boost::multiprecision::cpp_dec_float<Digits10, ExponentType, Allocator>::cpp_dec_float_max_exp;   // Type differs from int.
