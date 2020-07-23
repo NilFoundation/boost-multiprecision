@@ -1138,7 +1138,7 @@ T multi_exp(typename std::vector<T>::const_iterator  vec_start,
    for (size_t j = 0; j < n; ++j)
    {
       size_t start        = j * chunk_len;
-      size_t end          = min((cpp_int)start + chunk_len, (cpp_int)n);
+      size_t end          = std::min(start + chunk_len, n);
       size_t bucket_start = bucket_size * j;
       part_res[j]         = multi_exp_subgroup(vec_start, scalar_start, start, end, bucket_size, bucket_start);
    }
@@ -1223,9 +1223,9 @@ T result_aggregation(typename std::vector<T> r, const size_t L)
 }
 
 template <typename T>
-T sum_par(typename std::vector<T>::const_iterator vec_start, cpp_bin_float_100 n)
+T sum_par(typename std::vector<T>::const_iterator vec_start, int n)
 {
-   size_t                  h = n / log(n);
+   size_t                  h = n / std::log(n);
    typename std::vector<T> part_res(h, std::numeric_limits<double>::infinity());
 
    for (size_t i = 0; i <= h - 1; ++i)
@@ -1236,12 +1236,12 @@ T sum_par(typename std::vector<T>::const_iterator vec_start, cpp_bin_float_100 n
       }
    }
 
-   size_t parallel_boundary = ceil(log(n));
-   size_t m                 = ceil(n / log(n));
+   size_t parallel_boundary = std::ceil(std::log(n));
+   size_t m                 = std::ceil(n / std::log(n));
 
    while (m > parallel_boundary)
    {
-      h = ceil(log((cpp_bin_float_100)(m)));
+      h = std::ceil(std::log((m)));
 
       for (size_t i = 0; i <= (m / h) - 1; ++i)
       {
@@ -1258,7 +1258,7 @@ T sum_par(typename std::vector<T>::const_iterator vec_start, cpp_bin_float_100 n
          part_res[i] = part_res[i * h];
       }
 
-      m = ceil((cpp_bin_float_100)(m / h));
+      m = std::ceil((m / h));
    }
 
    for (size_t i = 1; i <= m - 1; ++i)
