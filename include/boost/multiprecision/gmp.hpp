@@ -1162,7 +1162,7 @@ T multi_exp_subgroup(typename std::vector<T>::const_iterator  vec_start,
 
          for (size_t i = start; i <= end; ++i)
          {
-            size_t idx = get_bits(*(scalar_start + i), bucket_start, bucket_size, "binary");
+            size_t idx = get_bits(*(scalar_start + i), bucket_start, bucket_size, 2);
             if (idx > 0)
             {
                buckets[idx - 1] = buckets[idx - 1] + *(vec_start + i);
@@ -1183,16 +1183,10 @@ T multi_exp_subgroup(typename std::vector<T>::const_iterator  vec_start,
 
 template <typename T, typename OT>
 T get_bits(typename std::vector<OT>::const_iterator scalar_start,
-           const size_t start, const size_t end,
-           typename std::string repr)
+           const size_t start, const size_t end, const size_t repr)
 {
-   cpp_int base;
+   cpp_int base = repr;
    T       res = 0;
-
-   if (repr == "binary")
-   {
-      base = 2;
-   }
 
    for (size_t i = start; i < end; ++i)
    {
