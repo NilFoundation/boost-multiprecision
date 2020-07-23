@@ -1230,9 +1230,9 @@ T sum_par(typename std::vector<T>::const_iterator vec_start, int n)
 
    for (size_t i = 0; i <= h - 1; ++i)
    {
-      for (size_t j = 0; j <= log(n) - 1; ++j)
+      for (size_t j = 0; j <= std::log(n) - 1; ++j)
       {
-         part_res[i] = part_res[i] + *(vec_start + (i * log(n) + j));
+         part_res[i] = part_res[i] + *(vec_start + (i * std::log(n) + j));
       }
    }
 
