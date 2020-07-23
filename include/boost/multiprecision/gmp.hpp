@@ -1139,8 +1139,7 @@ T multi_exp(typename std::vector<T>::const_iterator  vec_start,
    {
       size_t start        = j * chunk_len;
       size_t end          = std::min(start + chunk_len, n);
-      size_t bucket_start = bucket_size * j;
-      part_res[j]         = multi_exp_subgroup(vec_start, scalar_start, start, end, bucket_size, bucket_start);
+      part_res[j]         = multi_exp_subgroup(vec_start, scalar_start, start, end, bucket_size);
    }
 
    return ResultAggregation(part_res);
@@ -1149,16 +1148,22 @@ T multi_exp(typename std::vector<T>::const_iterator  vec_start,
 template <typename T, typename OT>
 T multi_exp_subgroup(typename std::vector<T>::const_iterator  vec_start,
                      typename std::vector<OT>::const_iterator scalar_start,
-                     const size_t start, const size_t end, const size_t workers_amount,
-                     const size_t bucket_size, const size_t bucket_start)
+                     const size_t start, const size_t end, 
+                     const size_t workers_amount, const size_t bucket_size)
 {
-   typename std::vector<T> part_sum(workers_amount, std::numeric_limits<double>::infinity());
+   size_t L = std::log2(*(scalar_start + start));
+   size_t b = std::ceil(L / bucket_size);
+   size_t c = std::ceil(b / workers_amount);
 
-   for (size_t l = bucket_start; l <= bucket_start + bucket_size; ++l)
+   typename std::vector<T> part_sum(workers_amount * c, std::numeric_limits<double>::infinity());
+
+   for (size_t j = 0; j < workers_amount; ++j)
    {
-      for (size_t j = 0; j < workers_amount; ++j)
-      {
-         typename std::vector<T> buckets(bucket_size, std::numeric_limits<double>::infinity());
+      for (size_t k = 0; k <= c - 1; ++k) {
+
+         size_t bucket_start = j * bucket_size * c + k * bucket_size;
+
+         typename std::vector<T> buckets(pow((cpp_int)(2), bucket_size), std::numeric_limits<double>::infinity());
 
          for (size_t i = start; i <= end; ++i)
          {
@@ -1170,7 +1175,7 @@ T multi_exp_subgroup(typename std::vector<T>::const_iterator  vec_start,
          }
 
          size_t acc = std::numeric_limits<double>::infinity();
-
+      
          for (size_t i = 0; i <= bucket_size; ++i)
          {
             acc         = acc + buckets[i];
