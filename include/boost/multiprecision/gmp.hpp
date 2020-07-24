@@ -1135,7 +1135,7 @@ T multi_exp(typename std::vector<T>::const_iterator  vec_start,
    std::vector<T> part_res(num_groups);
 
    //do parallel for j
-   for (size_t j = 0; j < n; ++j)
+   for (size_t j = 0; j < num_groups; ++j)
    {
       size_t start        = j * chunk_len;
       size_t end          = std::min(start + chunk_len, n);
@@ -1163,11 +1163,8 @@ T multi_exp_subgroup(typename std::vector<T>::const_iterator  vec_start,
       for (size_t k = 0; k <= c - 1; ++k) {
 
          size_t bucket_start = j * bucket_size * c + k * bucket_size;
-         modular_adaptor<T> result, b, e;
-         b.m_base = 2;
-         b.m_mod = std::numeric_limits<double>::infinity();
-         e.m_base = bucket_size;
-         e.m_mod = b.m_mod;
+         modular_adaptor<T> b(2, std::numeric_limits<double>::infinity()), result;
+         modular_adaptor<T> e(bucket_size, std::numeric_limits<double>::infinity());
          eval_pow(result, b, e);
          typename std::vector<T> buckets(result.m_base, std::numeric_limits<double>::infinity());
 
@@ -1201,11 +1198,8 @@ T get_bits(typename std::vector<OT>::const_iterator scalar_start,
 
    for (size_t i = start; i < end; ++i)
    {
-      modular_adaptor<T> result, b, e;
-      b.m_base = base;
-      b.m_mod = std::numeric_limits<double>::infinity();
-      e.m_base = i - start;
-      e.m_mod = b.m_mod;
+      modular_adaptor<T> b(base, std::numeric_limits<double>::infinity()), result;
+      modular_adaptor<T> e(i - start, std::numeric_limits<double>::infinity());
       eval_pow(result, b, e);
       res = res + i * result.m_base;
    }
