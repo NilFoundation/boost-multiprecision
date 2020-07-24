@@ -16,6 +16,7 @@
 #include <boost/multiprecision/detail/digits.hpp>
 #include <boost/multiprecision/detail/atomic.hpp>
 #include <boost/multiprecision/detail/min_max.hpp>
+#include <boost/multiprecision/modular/modular_adaptor.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/functional/hash_fwd.hpp>
@@ -1162,8 +1163,13 @@ T multi_exp_subgroup(typename std::vector<T>::const_iterator  vec_start,
       for (size_t k = 0; k <= c - 1; ++k) {
 
          size_t bucket_start = j * bucket_size * c + k * bucket_size;
-
-         typename std::vector<T> buckets(pow((cpp_int)(2), bucket_size), std::numeric_limits<double>::infinity());
+         modular_adaptor<T> result, b, e;
+         b.m_base = 2;
+         b.m_mod = std::numeric_limits<double>::infinity();
+         e.m_base = bucket_size;
+         e.m_mod = b.m_mod;
+         eval_pow(result, b, e);
+         typename std::vector<T> buckets(result.m_base, std::numeric_limits<double>::infinity());
 
          for (size_t i = start; i <= end; ++i)
          {
@@ -1195,7 +1201,13 @@ T get_bits(typename std::vector<OT>::const_iterator scalar_start,
 
    for (size_t i = start; i < end; ++i)
    {
-      res = res + i * pow(base, i - start);
+      modular_adaptor<T> result, b, e;
+      b.m_base = base;
+      b.m_mod = std::numeric_limits<double>::infinity();
+      e.m_base = i - start;
+      e.m_mod = b.m_mod;
+      eval_pow(result, b, e);
+      res = res + i * result.m_base;
    }
    return res;
 }
