@@ -1127,15 +1127,14 @@ T opt_window_wnaf_exp(const T &base, const number<gmp_int> &scalar, const size_t
 
 template <typename T, typename OT>
 T multi_exp(typename std::vector<T>::const_iterator  vec_start,
-            typename std::vector<T>::const_iterator  vec_end,
             typename std::vector<OT>::const_iterator scalar_start,
-            typename std::vector<OT>::const_iterator scalar_end,
             const size_t num_groups, const size_t bucket_size, const size_t n)
 {
    size_t chunk_len = (n / num_groups);
 
    std::vector<T> part_res(num_groups);
 
+   //do parallel for j
    for (size_t j = 0; j < n; ++j)
    {
       size_t start        = j * chunk_len;
@@ -1158,6 +1157,7 @@ T multi_exp_subgroup(typename std::vector<T>::const_iterator  vec_start,
 
    typename std::vector<T> part_sum(workers_amount * c, std::numeric_limits<double>::infinity());
 
+   //do parallel for j
    for (size_t j = 0; j < workers_amount; ++j)
    {
       for (size_t k = 0; k <= c - 1; ++k) {
@@ -1239,6 +1239,7 @@ T sum_par(typename std::vector<T>::const_iterator vec_start, int n)
    size_t                  h = n / std::log(n);
    typename std::vector<T> part_res(h, std::numeric_limits<double>::infinity());
 
+   //do parallel for i
    for (size_t i = 0; i <= h - 1; ++i)
    {
       for (size_t j = 0; j <= std::log(n) - 1; ++j)
@@ -1254,6 +1255,7 @@ T sum_par(typename std::vector<T>::const_iterator vec_start, int n)
    {
       h = std::ceil(std::log((m)));
 
+      //do parallel for i
       for (size_t i = 0; i <= (m / h) - 1; ++i)
       {
          size_t d = h - 1;
