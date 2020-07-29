@@ -11,10 +11,13 @@
 
 #include <boost/multiprecision/modular/modular_adaptor.hpp>
 
-template <typename T, typename OT>
-T eval_multi_exp(typename std::vector<T>::const_iterator  vec_start,
-                 typename std::vector<OT>::const_iterator scalar_start,
-                 const size_t num_groups, const size_t bucket_size, const size_t n)
+template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2, unsigned MinBits3, unsigned MaxBits3, cpp_integer_type SignType3, cpp_int_check_type Checked3, class Allocator3>
+inline typename enable_if_c<is_fixed_precision<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value || is_fixed_precision<cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> >::value || is_fixed_precision<cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> >::value>::type
+eval_multi_exp(typename std::vector<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>>::const_iterator  vec_start,
+               typename std::vector<cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2>>::const_iterator scalar_start,
+               const cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> num_groups, 
+               const cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> bucket_size, 
+               const cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> n)
 {
    size_t chunk_len = std::ceil(n / num_groups);
 
@@ -31,11 +34,14 @@ T eval_multi_exp(typename std::vector<T>::const_iterator  vec_start,
    return ResultAggregation(part_res);
 }
 
-template <typename T, typename OT>
-T multi_exp_subgroup(typename std::vector<T>::const_iterator  vec_start,
-                     typename std::vector<OT>::const_iterator scalar_start,
-                     const size_t start, const size_t end, 
-                     const size_t workers_amount, const size_t bucket_size)
+template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2, unsigned MinBits3, unsigned MaxBits3, cpp_integer_type SignType3, cpp_int_check_type Checked3, class Allocator3>
+inline typename enable_if_c<is_fixed_precision<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value || is_fixed_precision<cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> >::value || is_fixed_precision<cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> >::value>::type
+multi_exp_subgroup(typename std::vector<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>>::const_iterator  vec_start,
+                   typename std::vector<cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2>>::const_iterator scalar_start,
+                   const cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> start, 
+                   const cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> end, 
+                   const cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> workers_amount, 
+                   const cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> bucket_size)
 {
    size_t L = std::log2(*(scalar_start + start));
    size_t b = std::ceil(L / bucket_size);
@@ -75,9 +81,12 @@ T multi_exp_subgroup(typename std::vector<T>::const_iterator  vec_start,
    return part_sum;
 }
 
-template <typename T, typename OT>
-T get_bits(typename std::vector<OT>::const_iterator scalar_start,
-           const size_t start, const size_t end, const size_t repr)
+template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2>
+inline BOOST_MP_CXX14_CONSTEXPR typename enable_if_c<!is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value && !is_trivial_cpp_int<cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> >::value>::type
+get_bits(typename std::vector<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>>::const_iterator scalar_start,
+         const cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> start, 
+         const cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> end, 
+         const cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> repr)
 {
    cpp_int base = repr;
    T       res = 0;
@@ -92,8 +101,10 @@ T get_bits(typename std::vector<OT>::const_iterator scalar_start,
    return res;
 }
 
-template <typename T>
-T result_aggregation(typename std::vector<T> r, const size_t L)
+template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2>
+inline BOOST_MP_CXX14_CONSTEXPR typename enable_if_c<!is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value && !is_trivial_cpp_int<cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> >::value>::type
+result_aggregation(typename std::vector<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>> r, 
+				   const cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> L)
 {
    typename std::vector<T> part_res(L, std::numeric_limits<double>::infinity());
 
@@ -113,8 +124,10 @@ T result_aggregation(typename std::vector<T> r, const size_t L)
    return S;
 }
 
-template <typename T>
-T sum_par(typename std::vector<T>::const_iterator vec_start, int n)
+template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2>
+inline BOOST_MP_CXX14_CONSTEXPR typename enable_if_c<!is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value && !is_trivial_cpp_int<cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> >::value>::type
+sum_par(typename std::vector<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>>::const_iterator vec_start, 
+		cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> n)
 {
    size_t                  h = n / std::log(n);
    typename std::vector<T> part_res(h, std::numeric_limits<double>::infinity());
@@ -160,6 +173,15 @@ T sum_par(typename std::vector<T>::const_iterator vec_start, int n)
    }
 
    return part_res[0];
+}
+
+
+template <typename Backend, expression_template_option ExpressionTemplates>
+inline typename std::enable_if<number_category<Backend>::value == number_kind_integer, int>::type multi_exp(
+    const number<Backend, ExpressionTemplates>& vec_start, const number<Backend, ExpressionTemplates>& num_groups, 
+    const number<Backend, ExpressionTemplates>& bucket_size, const number<Backend, ExpressionTemplates>& n)
+{
+   return multi_exp(vec_start.backend(), vec_start.backend(), num_groups.backend(), bucket_size.backend(), n.backend());
 }
 
 template <typename Backend, expression_template_option ExpressionTemplates>
