@@ -11,43 +11,41 @@
 
 #include <boost/multiprecision/modular/modular_adaptor.hpp>
 
-template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2, unsigned MinBits3, unsigned MaxBits3, cpp_integer_type SignType3, cpp_int_check_type Checked3, class Allocator3>
-inline typename enable_if_c<is_fixed_precision<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value || is_fixed_precision<cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> >::value || is_fixed_precision<cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> >::value>::type
-eval_multi_exp(typename std::vector<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>>::const_iterator  vec_start,
-               typename std::vector<cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2>>::const_iterator scalar_start,
-               const cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> num_groups, 
-               const cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> bucket_size, 
-               const cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> n)
-{
-   size_t chunk_len = std::ceil(n / num_groups);
+namespace boost {
+namespace multiprecision {
 
-   std::vector<T> part_res(num_groups);
+template <typename Backend>
+inline Backend eval_multiexp(typename std::vector<Backend>::const_iterator vec_start,
+                 		  	  typename std::vector<Backend>::const_iterator scalar_start,
+                 		  	  const Backend& num_groups, const Backend& bucket_size, 
+                 		  	  const Backend& n, const Backend& workers_amount)
+{	
+    size_t chunk_len = std::ceil(n  / num_groups);
 
-   //do parallel for j
-   for (size_t j = 0; j < num_groups; ++j)
-   {
-      size_t start        = j * chunk_len;
-      size_t end          = std::min(start + chunk_len - 1, n - 1);
-      part_res[j]         = multi_exp_subgroup(vec_start, scalar_start, start, end, bucket_size);
-   }
+    std::vector<Backend> part_res(num_groups);
 
-   return ResultAggregation(part_res);
+    //do parallel for j
+    for (size_t j = 0; j < num_groups; ++j)
+    {
+    	size_t start = j * chunk_len;
+        size_t end   = std::min(start + chunk_len - 1, n - 1);
+        part_res[j]  = eval_multiexp_subgroup(vec_start, scalar_start, start, end, workers_amount, bucket_size);
+    }
+
+    return ResultAggregation(part_res);
 }
 
-template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2, unsigned MinBits3, unsigned MaxBits3, cpp_integer_type SignType3, cpp_int_check_type Checked3, class Allocator3>
-inline typename enable_if_c<is_fixed_precision<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value || is_fixed_precision<cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> >::value || is_fixed_precision<cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> >::value>::type
-multi_exp_subgroup(typename std::vector<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>>::const_iterator  vec_start,
-                   typename std::vector<cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2>>::const_iterator scalar_start,
-                   const cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> start, 
-                   const cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> end, 
-                   const cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> workers_amount, 
-                   const cpp_int_backend<MinBits3, MaxBits3, SignType3, Checked3, Allocator3> bucket_size)
+template <typename Backend>
+inline Backend eval_multiexp_subgroup(typename std::vector<Backend>::const_iterator vec_start,
+                 		  			   typename std::vector<Backend>::const_iterator scalar_start,
+                    	  			   const Backend& start, const Backend& end, 
+                          			   const Backend& workers_amount, const Backend& bucket_size)
 {
    size_t L = std::log2(*(scalar_start + start));
    size_t b = std::ceil(L / bucket_size);
    size_t c = std::ceil(b / workers_amount);
 
-   typename std::vector<T> part_sum(workers_amount * c, std::numeric_limits<double>::infinity());
+   typename std::vector<Backend> part_sum(workers_amount * c, std::numeric_limits<double>::infinity());
 
    //do parallel for j
    for (size_t j = 0; j < workers_amount; ++j)
@@ -55,10 +53,10 @@ multi_exp_subgroup(typename std::vector<cpp_int_backend<MinBits1, MaxBits1, Sign
       for (size_t k = 0; k <= c - 1; ++k) {
 
          size_t bucket_start = j * bucket_size * c + k * bucket_size;
-         modular_adaptor<T> b(2, std::numeric_limits<double>::infinity()), result;
-         modular_adaptor<T> e(bucket_size, std::numeric_limits<double>::infinity());
+         modular_adaptor<Backend> b(2, std::numeric_limits<double>::infinity()), result;
+         modular_adaptor<Backend> e(bucket_size, std::numeric_limits<double>::infinity());
          eval_pow(result, b, e);
-         typename std::vector<T> buckets(result.m_base, std::numeric_limits<double>::infinity());
+         typename std::vector<Backend> buckets(result.m_base, std::numeric_limits<double>::infinity());
 
          for (size_t i = start; i <= end; ++i)
          {
@@ -81,39 +79,35 @@ multi_exp_subgroup(typename std::vector<cpp_int_backend<MinBits1, MaxBits1, Sign
    return part_sum;
 }
 
-template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2>
-inline BOOST_MP_CXX14_CONSTEXPR typename enable_if_c<!is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value && !is_trivial_cpp_int<cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> >::value>::type
-get_bits(typename std::vector<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>>::const_iterator scalar_start,
-         const cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> start, 
-         const cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> end, 
-         const cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> repr)
+template <typename Backend>
+inline Backend get_bits(const Backend& scalar_start, const Backend& start, const Backend& end, const Backend& repr)
 {
-   cpp_int base = repr;
-   T       res = 0;
+   Backend res = 0, e = scalar_start;
 
-   for (size_t i = start; i < end; ++i)
+   for (size_t i = start; i <= end; ++i)
    {
-      modular_adaptor<T> b(base, std::numeric_limits<double>::infinity()), result;
-      modular_adaptor<T> e(i - start, std::numeric_limits<double>::infinity());
-      eval_pow(result, b, e);
-      res = res + i * result.m_base;
+        modular_adaptor<Backend> b(repr, std::numeric_limits<double>::infinity()), result;
+        modular_adaptor<Backend> e(i - start, std::numeric_limits<double>::infinity());
+        eval_pow(result, b, e);
+        if (scalar_start & 1) {
+      	    res = res + i * result.m_base;
+      	}
+      	scalar_start >>= 1;	
    }
    return res;
 }
 
-template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2>
-inline BOOST_MP_CXX14_CONSTEXPR typename enable_if_c<!is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value && !is_trivial_cpp_int<cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> >::value>::type
-result_aggregation(typename std::vector<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>> r, 
-				   const cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> L)
+template <typename Backend>
+inline Backend result_aggregation(typename std::vector<Backend> r, const Backend& L)
 {
-   typename std::vector<T> part_res(L, std::numeric_limits<double>::infinity());
+   typename std::vector<Backend> part_res(L, std::numeric_limits<double>::infinity());
 
    for (size_t i = 0; i <= L; ++i)
    {
       part_res[i] = sum_par(r, i);
    }
 
-   size_t S = std::numeric_limits<double>::infinity();
+   Backend S = std::numeric_limits<double>::infinity();
 
    for (size_t i = 0; i <= L - 1; ++i)
    {
@@ -124,20 +118,18 @@ result_aggregation(typename std::vector<cpp_int_backend<MinBits1, MaxBits1, Sign
    return S;
 }
 
-template <unsigned MinBits1, unsigned MaxBits1, cpp_integer_type SignType1, cpp_int_check_type Checked1, class Allocator1, unsigned MinBits2, unsigned MaxBits2, cpp_integer_type SignType2, cpp_int_check_type Checked2, class Allocator2>
-inline BOOST_MP_CXX14_CONSTEXPR typename enable_if_c<!is_trivial_cpp_int<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1> >::value && !is_trivial_cpp_int<cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> >::value>::type
-sum_par(typename std::vector<cpp_int_backend<MinBits1, MaxBits1, SignType1, Checked1, Allocator1>>::const_iterator vec_start, 
-		cpp_int_backend<MinBits2, MaxBits2, SignType2, Checked2, Allocator2> n)
+template <typename Backend>
+inline Backend sum_par(typename std::vector<Backend>::const_iterator vec_start, const Backend& n)
 {
-   size_t                  h = n / std::log(n);
-   typename std::vector<T> part_res(h, std::numeric_limits<double>::infinity());
+   size_t                        h = std::ceil(n / std::log(n));
+   typename std::vector<Backend> part_res(h, std::numeric_limits<double>::infinity());
 
    //do parallel for i
    for (size_t i = 0; i <= h - 1; ++i)
    {
       for (size_t j = 0; j <= std::log(n) - 1; ++j)
       {
-         part_res[i] = part_res[i] + *(vec_start + (i * std::log(n) + j));
+         part_res[i] = part_res[i] + *(vec_start + (i * std::ceil(std::log(n)) + j));
       }
    }
 
@@ -177,20 +169,21 @@ sum_par(typename std::vector<cpp_int_backend<MinBits1, MaxBits1, SignType1, Chec
 
 
 template <typename Backend, expression_template_option ExpressionTemplates>
-inline typename std::enable_if<number_category<Backend>::value == number_kind_integer, int>::type multi_exp(
+inline typename std::enable_if<number_category<Backend>::value == number_kind_integer, int>::type multiexp(
     const number<Backend, ExpressionTemplates>& vec_start, const number<Backend, ExpressionTemplates>& num_groups, 
-    const number<Backend, ExpressionTemplates>& bucket_size, const number<Backend, ExpressionTemplates>& n)
+    const number<Backend, ExpressionTemplates>& bucket_size, const number<Backend, ExpressionTemplates>& n,
+    const number<Backend, ExpressionTemplates>& workers_amount)
 {
-   return multi_exp(vec_start.backend(), vec_start.backend(), num_groups.backend(), bucket_size.backend(), n.backend());
+   return eval_multiexp(vec_start.backend(), vec_start.backend(), num_groups.backend(), bucket_size.backend(), n.backend());
 }
 
 template <typename Backend, expression_template_option ExpressionTemplates>
-inline typename std::enable_if<number_category<Backend>::value == number_kind_integer, int>::type multi_exp(
+inline typename std::enable_if<number_category<Backend>::value == number_kind_integer, int>::type multiexp(
     const number<Backend, ExpressionTemplates>& vec_start, const number<Backend, ExpressionTemplates>& scalar_start, 
     const number<Backend, ExpressionTemplates>& num_groups, const number<Backend, ExpressionTemplates>& bucket_size,
-    const number<Backend, ExpressionTemplates>& n)
+    const number<Backend, ExpressionTemplates>& n, const number<Backend, ExpressionTemplates>& workers_amount)
 {
-   return eval_multi_exp(vec_start.backend(), scalar_start.backend(), num_groups.backend(), bucket_size.backend(), n.backend());
+   return eval_multiexp(vec_start.backend(), scalar_start.backend(), num_groups.backend(), bucket_size.backend(), n.backend(), workers_amount.backend());
 }
 
 }
