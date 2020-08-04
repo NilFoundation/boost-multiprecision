@@ -10,25 +10,40 @@
 #define BOOST_MULTIPRECISION_MULTIEXP_HPP
 
 #include <boost/multiprecision/modular/modular_adaptor.hpp>
+#include <boost/multiprecision/detail/default_ops.hpp>
 
 namespace boost {
 namespace multiprecision {
 
 template <typename Backend>
-inline Backend eval_multiexp(typename std::vector<Backend>::const_iterator vec_start,
-                 		  	  typename std::vector<Backend>::const_iterator scalar_start,
-                 		  	  const Backend& num_groups, const Backend& bucket_size, 
-                 		  	  const Backend& n, const Backend& workers_amount)
-{	
-    size_t chunk_len = std::ceil(n  / num_groups);
+inline int eval_multiexp(const Backend& vec_start, const Backend& scalar_start,
+                         const Backend& num_groups, const Backend& bucket_size, 
+                         const Backend& n, const Backend& workers_amount)
+{ 
+    using default_ops::eval_divide;
+    using default_ops::eval_ceil;
+    using default_ops::eval_multiply;
+    using default_ops::eval_subtract;
+    using default_ops::eval_add;
 
-    std::vector<Backend> part_res(num_groups);
+    Backend chunk_len;
 
-    //do parallel for j
-    for (size_t j = 0; j < num_groups; ++j)
+    eval_divide(chunk_len, n, num_groups);
+    eval_ceil(chunk_len, chunk_len);
+
+    //part_res(num_groups);
+    typename Backend::const_limb_pointer part_res;
+
+    Backend start, end, one;
+
+    //parallel for j
+    for (size_t j = 0; j < num_groups.size(); ++j)
     {
-    	size_t start = j * chunk_len;
-        size_t end   = std::min(start + chunk_len - 1, n - 1);
+        eval_multiply(start, j, chunk_len);
+        eval_add(end, start, chunk_len);
+        end = std::min(end, n);
+        eval_subtract(end, one);
+        
         part_res[j]  = eval_multiexp_subgroup(vec_start, scalar_start, start, end, workers_amount, bucket_size);
     }
 
@@ -36,52 +51,69 @@ inline Backend eval_multiexp(typename std::vector<Backend>::const_iterator vec_s
 }
 
 template <typename Backend>
-inline Backend eval_multiexp_subgroup(typename std::vector<Backend>::const_iterator vec_start,
-                 		  			   typename std::vector<Backend>::const_iterator scalar_start,
-                    	  			   const Backend& start, const Backend& end, 
-                          			   const Backend& workers_amount, const Backend& bucket_size)
+inline Backend eval_multiexp_subgroup(const Backend& vec_start, const Backend& scalar_start,
+                                      const Backend& start, const Backend& end, 
+                                      const Backend& workers_amount, const Backend& bucket_size)
 {
-   size_t L = std::log2(*(scalar_start + start));
-   size_t b = std::ceil(L / bucket_size);
-   size_t c = std::ceil(b / workers_amount);
+   using default_ops::eval_add;
+   using default_ops::eval_logb;
+   using default_ops::eval_divide;
+   using default_ops::eval_ceil;
 
-   typename std::vector<Backend> part_sum(workers_amount * c, std::numeric_limits<double>::infinity());
+   typename Backend::const_limb_pointer vec_start_pointer = vec_start.limbs();
+   typename Backend::const_limb_pointer scalar_start_pointer = scalar_start.limbs();
+
+   Backend res, L, b, c;
+   eval_add(res, scalar_start_pointer, start);
+   eval_logb(L, *(res));
+   eval_ceil(L, L);
+   eval_divide(b, L, bucket_size);
+   eval_ceil(b, b);
+   eval_divide(c, b, workers_amount);
+   eval_ceil(c, c);
+
+   //part_sum(workers_amount * c)
+   typename Backend::const_limb_pointer part_sum;
 
    //do parallel for j
-   for (size_t j = 0; j < workers_amount; ++j)
+   for (size_t j = 0; j < workers_amount.size(); ++j)
    {
-      for (size_t k = 0; k <= c - 1; ++k) {
+      for (size_t k = 0; k <= c.size() - 1; ++k) {
 
          size_t bucket_start = j * bucket_size * c + k * bucket_size;
          modular_adaptor<Backend> b(2, std::numeric_limits<double>::infinity()), result;
          modular_adaptor<Backend> e(bucket_size, std::numeric_limits<double>::infinity());
          eval_pow(result, b, e);
-         typename std::vector<Backend> buckets(result.m_base, std::numeric_limits<double>::infinity());
+
+         //buckets(result.m_base)
+         typename Backend::const_limb_pointer buckets;
 
          for (size_t i = start; i <= end; ++i)
          {
-            size_t idx = get_bits(*(scalar_start + i), bucket_start, bucket_size, 2);
+            size_t idx = get_bits(*(scalar_start_pointer + i), bucket_start, bucket_size, 2);
             if (idx > 0)
             {
                buckets[idx - 1] = buckets[idx - 1] + *(vec_start + i);
             }
          }
 
-         size_t acc = std::numeric_limits<double>::infinity();
+         Backend acc = std::numeric_limits<Backend>::infinity();
       
          for (size_t i = 0; i <= bucket_size; ++i)
          {
-            acc         = acc + buckets[i];
-            part_sum[j] = part_sum[j] + acc;
+            eval_add(acc, acc, buckets[i]);
+            eval_add(part_sum[j], part_sum[j], acc);
          }
       }
    }
    return part_sum;
 }
 
+
 template <typename Backend>
 inline Backend get_bits(const Backend& scalar_start, const Backend& start, const Backend& end, const Backend& repr)
 {
+   typename Backend::const_limb_pointer scalar_start_pointer = scalar_start.limbs();
    Backend res = 0, e = scalar_start;
 
    for (size_t i = start; i <= end; ++i)
@@ -89,20 +121,22 @@ inline Backend get_bits(const Backend& scalar_start, const Backend& start, const
         modular_adaptor<Backend> b(repr, std::numeric_limits<double>::infinity()), result;
         modular_adaptor<Backend> e(i - start, std::numeric_limits<double>::infinity());
         eval_pow(result, b, e);
-        if (scalar_start & 1) {
-      	    res = res + i * result.m_base;
-      	}
-      	scalar_start >>= 1;	
+        if (scalar_start_pointer & 1) {
+            res = res + i * result.m_base;
+        }
+        scalar_start >>= 1; 
    }
    return res;
 }
 
-template <typename Backend>
-inline Backend result_aggregation(typename std::vector<Backend> r, const Backend& L)
-{
-   typename std::vector<Backend> part_res(L, std::numeric_limits<double>::infinity());
 
-   for (size_t i = 0; i <= L; ++i)
+template <typename Backend>
+inline int result_aggregation(const Backend& r, const Backend& L)
+{
+   //part_res(L)
+   typename Backend::const_limb_pointer part_res;
+
+   for (size_t i = 0; i <= L.size(); ++i)
    {
       part_res[i] = sum_par(r, i);
    }
@@ -110,19 +144,22 @@ inline Backend result_aggregation(typename std::vector<Backend> r, const Backend
    Backend S = std::numeric_limits<double>::infinity();
 
    for (size_t i = 0; i <= L - 1; ++i)
-   {
-      S = S * 2;
-      S = S + part_res[i];
+   {  
+      eval_multiplay(S, S, 2);
+      eval_add(S, S, part_res[i]);
    }
 
    return S;
 }
 
 template <typename Backend>
-inline Backend sum_par(typename std::vector<Backend>::const_iterator vec_start, const Backend& n)
+inline Backend sum_par(const Backend& vec_start, const Backend& n)
 {
-   size_t                        h = std::ceil(n / std::log(n));
-   typename std::vector<Backend> part_res(h, std::numeric_limits<double>::infinity());
+
+   size_t h = std::ceil(n / std::log(n));
+
+   //part_res(h)
+   typename Backend::const_limb_pointer part_res;
 
    //do parallel for i
    for (size_t i = 0; i <= h - 1; ++i)
