@@ -33,8 +33,9 @@ template <typename T>
 void test()
 {
    using namespace boost::multiprecision;
-
-   BOOST_CHECK_EQUAL(multiexp({T(2), T(3)}, {T(5), T(3)}, T(1), T(2), T(2), T(2)), T(19));
+   std::vector<std::pair<T, T> > tmp1{std::make_pair(T(2), T(2)), std::make_pair(T(3), T(3))};
+   std::vector<T> tmp2{T(5), T(3)};
+   BOOST_CHECK_EQUAL(multiexp(tmp1.begin(), tmp2.begin(), T(1), T(2), T(2), T(2)), T(19));
 }
 
 int main()
