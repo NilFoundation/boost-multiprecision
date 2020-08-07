@@ -1921,6 +1921,24 @@ class number
       eval_bitwise_xor(m_backend, temp.m_backend);
    }
 
+   template <class Exp, class unknown>
+   BOOST_MP_CXX14_CONSTEXPR typename boost::disable_if_c<boost::multiprecision::number_category<self_type>::value == boost::multiprecision::number_kind_integer || sizeof(Exp) == 1>::type
+   do_msb(const Exp& e, const unknown&)
+   {
+      using default_ops::eval_msb;
+      self_type temp(e);
+      eval_msb(m_backend, temp.m_backend);
+   }
+
+   template <class Exp, class Val, class unknown>
+   BOOST_MP_CXX14_CONSTEXPR typename boost::disable_if_c<boost::multiprecision::number_category<self_type>::value == boost::multiprecision::number_kind_integer || sizeof(Exp) == 1>::type
+   do_bit_test(const Exp& e, const Val& val, const unknown&)
+   {
+      using default_ops::eval_bit_test;
+      self_type temp(e);
+      eval_bit_test(m_backend, temp.backend(), static_cast<std::size_t>(val));
+   }
+
    // Tests if the expression contains a reference to *this:
    template <class Exp>
    BOOST_MP_FORCEINLINE BOOST_MP_CXX14_CONSTEXPR bool contains_self(const Exp& e) const BOOST_NOEXCEPT
